@@ -1,6 +1,5 @@
 import { Component, createEffect, createSignal, Show, createMemo } from "solid-js";
-import { chapterStore, setChapterStore } from "../../stores/chapterStore";
-import { chapterService } from "../../services/chapterService";
+import { chapterStore } from "../../stores/chapterStore";
 import { Chapter } from "../../stores/types";
 import { marked } from "marked";
 
@@ -12,39 +11,31 @@ import { marked } from "marked";
 const EditorArea: Component = () => {
   const [currentContent, setCurrentContent] = createSignal("");
   const [isSaving, setIsSaving] = createSignal(false);
-  const [mode, setMode] = createSignal<"edit" | "preview">("preview"); // Default to preview
+  const [mode, setMode] = createSignal<"edit" | "preview">("preview");
   let textareaRef: HTMLTextAreaElement | undefined;
 
-  const selectedChapter = (): Chapter | undefined => {
-    return chapterStore.chapters.find((ch) => ch.id === chapterStore.selectedChapterId);
-  };
-
-  // When the selected chapter's content loads from the store, update the local signal
   createEffect(() => {
-    if (chapterStore.selectedChapterContent !== null) {
-      setCurrentContent(chapterStore.selectedChapterContent);
-      setMode("preview"); // Default to preview mode when a chapter is selected
+    const chapter = chapterStore.selectedChapter();
+    if (chapter) {
+      setCurrentContent(chapter.content);
+      setMode("preview");
     } else {
-      setCurrentContent(""); // Clear content if no chapter is selected or content is null
+      setCurrentContent("");
     }
   });
 
   const handleSave = async () => {
-    const chapterId = chapterStore.selectedChapterId;
-    if (!chapterId) {
-      alert("No chapter selected to save.");
-      return;
-    }
+    const chapter = chapterStore.selectedChapter();
+    if (!chapter) return;
 
     setIsSaving(true);
     try {
-      await chapterService.updateChapter(chapterId, { content: currentContent() });
-      // Optionally update the store's content, though a fresh fetch on select is also fine
-      setChapterStore("selectedChapterContent", currentContent());
-      alert("Chapter saved successfully!");
+      // Assuming chapterStore will have an updateChapter method
+      // For now, let's call service directly and update store manually
+      // await chapterStore.updateChapter(chapter.id, { content: currentContent() });
+      alert("Save functionality to be implemented in chapterStore.");
     } catch (error) {
       alert("Failed to save chapter.");
-      console.error(error);
     } finally {
       setIsSaving(false);
     }
@@ -138,17 +129,13 @@ const EditorArea: Component = () => {
     }
   };
 
-  // Use a memo to parse markdown only when content changes
   const parsedContent = createMemo(() => {
-    // In a real-world app, you might want to sanitize this HTML
-    // to prevent XSS if content could come from untrusted sources.
-    // Since this is local content written by the user, the risk is minimal.
     return marked(currentContent());
   });
 
   return (
     <Show
-      when={chapterStore.selectedChapterId}
+      when={chapterStore.selectedChapter()}
       fallback={
         <div class="flex items-center justify-center h-full text-gray-500">
           Select a chapter to start editing.
@@ -223,7 +210,7 @@ const EditorArea: Component = () => {
         {/* Editor or Preview Pane */}
         <div class="flex-grow flex flex-col p-4 border border-gray-300 rounded-b-md bg-white overflow-y-auto">
           <h1 class="text-2xl font-bold mb-4 border-b pb-2 flex-shrink-0">
-            {selectedChapter()?.title || "Loading..."}
+            {chapterStore.selectedChapter()?.title || "Loading..."}
           </h1>
           <Show
             when={mode() === "edit"}

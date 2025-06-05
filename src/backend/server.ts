@@ -43,9 +43,12 @@ app.get("/api", (req: Request, res: Response) => {
   res.send("TSWritter Backend API is running!");
 });
 
-// Import and use chapter routes
+// Import and use book and chapter routes
+import bookRoutes from "./routes/bookRoutes";
 import chapterRoutes from "./routes/chapterRoutes";
-app.use("/api/chapters", chapterRoutes);
+
+app.use("/api/books", bookRoutes);
+app.use("/api/books/:bookName/chapters", chapterRoutes);
 
 // The ideaRoutes are now handled within chapterRoutes
 // // import ideaRoutes from './routes/ideas';

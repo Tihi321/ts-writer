@@ -1,7 +1,7 @@
 {
   "name": "tswritter-backend",
   "version": "1.0.0",
-  "description": "Backend for TSWritterClean",
+  "description": "Backend for TSWritter",
   "main": "server.ts",
   "scripts": {
     "build": "tsc",

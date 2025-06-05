@@ -1,95 +1,118 @@
 import { Idea } from "../stores/types";
 
-const API_BASE_URL = "/api";
+const API_BASE_URL = "/api/books";
 
 export const ideaService = {
-  // GET /api/chapters/:chapterId/ideas
-  async getIdeasForChapter(chapterId: string): Promise<Idea[]> {
+  // GET /api/books/:bookName/chapters/:chapterId/ideas
+  async getIdeasForChapter(bookName: string, chapterId: string): Promise<Idea[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/chapters/${chapterId}/ideas`);
+      const response = await fetch(`${API_BASE_URL}/${bookName}/chapters/${chapterId}/ideas`);
       if (!response.ok) {
-        throw new Error(`Failed to fetch ideas for chapter ${chapterId}: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch ideas for chapter ${chapterId} in book ${bookName}: ${response.statusText}`
+        );
       }
       return (await response.json()) as Idea[];
     } catch (error) {
-      console.error(`Error fetching ideas for chapter ${chapterId}:`, error);
+      console.error(`Error fetching ideas for chapter ${chapterId} in ${bookName}:`, error);
       throw error;
     }
   },
 
-  // POST /api/chapters/:chapterId/ideas
-  async createIdea(chapterId: string, text: string): Promise<Idea> {
+  // POST /api/books/:bookName/chapters/:chapterId/ideas
+  async createIdea(bookName: string, chapterId: string, text: string): Promise<Idea> {
     try {
-      const response = await fetch(`${API_BASE_URL}/chapters/${chapterId}/ideas`, {
+      const response = await fetch(`${API_BASE_URL}/${bookName}/chapters/${chapterId}/ideas`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
       if (!response.ok) {
-        throw new Error(`Failed to create idea for chapter ${chapterId}: ${response.statusText}`);
+        throw new Error(
+          `Failed to create idea for chapter ${chapterId} in book ${bookName}: ${response.statusText}`
+        );
       }
       return (await response.json()) as Idea;
     } catch (error) {
-      console.error(`Error creating idea for chapter ${chapterId}:`, error);
+      console.error(`Error creating idea for chapter ${chapterId} in ${bookName}:`, error);
       throw error;
     }
   },
 
-  // PUT /api/chapters/:chapterId/ideas/:ideaId
+  // PUT /api/books/:bookName/chapters/:chapterId/ideas/:ideaId
   async updateIdea(
+    bookName: string,
     chapterId: string,
     ideaId: string,
     updates: { text?: string; order?: number }
   ): Promise<Idea> {
     try {
-      const response = await fetch(`${API_BASE_URL}/chapters/${chapterId}/ideas/${ideaId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/${bookName}/chapters/${chapterId}/ideas/${ideaId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+        }
+      );
       if (!response.ok) {
-        throw new Error(`Failed to update idea ${ideaId}: ${response.statusText}`);
+        throw new Error(
+          `Failed to update idea ${ideaId} in book ${bookName}: ${response.statusText}`
+        );
       }
       return (await response.json()) as Idea;
     } catch (error) {
-      console.error(`Error updating idea ${ideaId}:`, error);
+      console.error(`Error updating idea ${ideaId} in ${bookName}:`, error);
       throw error;
     }
   },
 
-  // DELETE /api/chapters/:chapterId/ideas/:ideaId
-  async deleteIdea(chapterId: string, ideaId: string): Promise<{ message: string }> {
+  // DELETE /api/books/:bookName/chapters/:chapterId/ideas/:ideaId
+  async deleteIdea(
+    bookName: string,
+    chapterId: string,
+    ideaId: string
+  ): Promise<{ message: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/chapters/${chapterId}/ideas/${ideaId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/${bookName}/chapters/${chapterId}/ideas/${ideaId}`,
+        {
+          method: "DELETE",
+        }
+      );
       if (!response.ok) {
-        throw new Error(`Failed to delete idea ${ideaId}: ${response.statusText}`);
+        throw new Error(
+          `Failed to delete idea ${ideaId} in book ${bookName}: ${response.statusText}`
+        );
       }
       return await response.json();
     } catch (error) {
-      console.error(`Error deleting idea ${ideaId}:`, error);
+      console.error(`Error deleting idea ${ideaId} in ${bookName}:`, error);
       throw error;
     }
   },
 
-  // POST /api/chapters/:chapterId/ideas/reorder
+  // POST /api/books/:bookName/chapters/:chapterId/ideas/reorder
   async reorderIdeas(
+    bookName: string,
     chapterId: string,
     ideaOrder: string[]
   ): Promise<{ message: string; ideas: Idea[] }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/chapters/${chapterId}/ideas/reorder`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ideaOrder }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/${bookName}/chapters/${chapterId}/ideas/reorder`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ideaOrder }),
+        }
+      );
       if (!response.ok) {
-        throw new Error(`Failed to reorder ideas: ${response.statusText}`);
+        throw new Error(`Failed to reorder ideas in book ${bookName}: ${response.statusText}`);
       }
       return await response.json();
     } catch (error) {
-      console.error("Error reordering ideas:", error);
+      console.error(`Error reordering ideas in ${bookName}:`, error);
       throw error;
     }
   },
