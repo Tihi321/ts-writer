@@ -1,0 +1,211 @@
+import { Component, createEffect, createSignal, Show } from "solid-js";
+import { chapterStore, setChapterStore } from "../../stores/chapterStore";
+import { chapterService } from "../../services/chapterService";
+import { Chapter } from "../../stores/types";
+
+const EditorArea: Component = () => {
+  const [currentContent, setCurrentContent] = createSignal("");
+  const [isSaving, setIsSaving] = createSignal(false);
+  let textareaRef: HTMLTextAreaElement | undefined;
+
+  const selectedChapter = (): Chapter | undefined => {
+    return chapterStore.chapters.find((ch) => ch.id === chapterStore.selectedChapterId);
+  };
+
+  // When the selected chapter's content loads from the store, update the local signal
+  createEffect(() => {
+    if (chapterStore.selectedChapterContent !== null) {
+      setCurrentContent(chapterStore.selectedChapterContent);
+    } else {
+      setCurrentContent(""); // Clear content if no chapter is selected or content is null
+    }
+  });
+
+  const handleSave = async () => {
+    const chapterId = chapterStore.selectedChapterId;
+    if (!chapterId) {
+      alert("No chapter selected to save.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await chapterService.updateChapter(chapterId, { content: currentContent() });
+      // Optionally update the store's content, though a fresh fetch on select is also fine
+      setChapterStore("selectedChapterContent", currentContent());
+      alert("Chapter saved successfully!");
+    } catch (error) {
+      alert("Failed to save chapter.");
+      console.error(error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const applyFormat = (
+    formatType: "bold" | "italic" | "h1" | "h2" | "bulletList" | "orderedList"
+  ) => {
+    if (!textareaRef) return;
+
+    const start = textareaRef.selectionStart;
+    const end = textareaRef.selectionEnd;
+    const currentValue = textareaRef.value;
+
+    if (formatType === "bold" || formatType === "italic") {
+      const wrapChar = formatType === "bold" ? "**" : "*";
+      const selectedText = currentValue.substring(start, end);
+      const newText = `${currentValue.substring(
+        0,
+        start
+      )}${wrapChar}${selectedText}${wrapChar}${currentValue.substring(end)}`;
+      setCurrentContent(newText);
+
+      // Focus and set cursor after the formatted text
+      setTimeout(() => {
+        textareaRef?.focus();
+        const newCursorPos = end + wrapChar.length * 2;
+        textareaRef?.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+    } else if (formatType === "h1" || formatType === "h2") {
+      const lineStart = currentValue.lastIndexOf("\n", start - 1) + 1;
+      const lineEnd = currentValue.indexOf("\n", start);
+      const currentLine = currentValue.substring(lineStart, lineEnd === -1 ? undefined : lineEnd);
+      const prefix = formatType === "h1" ? "# " : "## ";
+
+      // Check if the line already starts with the prefix to toggle it off
+      if (currentLine.startsWith(prefix)) {
+        const newLine = currentLine.substring(prefix.length);
+        const newText = `${currentValue.substring(0, lineStart)}${newLine}${currentValue.substring(
+          lineEnd === -1 ? currentValue.length : lineEnd
+        )}`;
+        setCurrentContent(newText);
+      } else {
+        // Remove other header formats before adding the new one
+        const cleanedLine = currentLine.replace(/^(#+\s)/, "");
+        const newText = `${currentValue.substring(
+          0,
+          lineStart
+        )}${prefix}${cleanedLine}${currentValue.substring(
+          lineEnd === -1 ? currentValue.length : lineEnd
+        )}`;
+        setCurrentContent(newText);
+      }
+    } else if (formatType === "bulletList" || formatType === "orderedList") {
+      const lineStart = currentValue.lastIndexOf("\n", start - 1) + 1;
+      // Find the end of the full line(s) selected
+      let lineEnd = currentValue.indexOf("\n", end);
+      if (lineEnd === -1) lineEnd = currentValue.length;
+
+      const selection = currentValue.substring(lineStart, lineEnd);
+      const lines = selection.split("\n");
+      let newLines: string[] = [];
+
+      if (formatType === "bulletList") {
+        const isBulleted = lines.every((line) => /^\s*-\s/.test(line));
+        if (isBulleted) {
+          newLines = lines.map((line) => line.replace(/^\s*-\s?/, ""));
+        } else {
+          newLines = lines.map((line) => (line.trim() === "" ? "" : `- ${line}`));
+        }
+      } else {
+        // orderedList
+        const isNumbered = lines.every((line) => /^\s*\d+\.\s/.test(line));
+        if (isNumbered) {
+          newLines = lines.map((line) => line.replace(/^\s*\d+\.\s?/, ""));
+        } else {
+          let count = 1;
+          newLines = lines.map((line) => {
+            if (line.trim() === "") return "";
+            return `${count++}. ${line}`;
+          });
+        }
+      }
+
+      const newSelection = newLines.join("\n");
+      const newText = `${currentValue.substring(
+        0,
+        lineStart
+      )}${newSelection}${currentValue.substring(lineEnd)}`;
+      setCurrentContent(newText);
+    }
+  };
+
+  return (
+    <Show
+      when={chapterStore.selectedChapterId}
+      fallback={
+        <div class="flex items-center justify-center h-full text-gray-500">
+          Select a chapter to start editing.
+        </div>
+      }
+    >
+      <div class="flex flex-col h-full">
+        {/* Toolbar - Remains a placeholder for now */}
+        <div class="p-2 border-b border-gray-300 bg-gray-50 mb-2 rounded-t-md flex items-center space-x-2">
+          <span class="font-semibold text-gray-700 mr-2">Toolbar:</span>
+          <button
+            onClick={() => applyFormat("bold")}
+            class="px-2 py-1 text-sm font-bold hover:bg-gray-200 rounded"
+          >
+            B
+          </button>
+          <button
+            onClick={() => applyFormat("italic")}
+            class="px-2 py-1 text-sm italic hover:bg-gray-200 rounded"
+          >
+            I
+          </button>
+          <button
+            onClick={() => applyFormat("h1")}
+            class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
+          >
+            H1
+          </button>
+          <button
+            onClick={() => applyFormat("h2")}
+            class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
+          >
+            H2
+          </button>
+          <button
+            onClick={() => applyFormat("bulletList")}
+            class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
+          >
+            Bullets
+          </button>
+          <button
+            onClick={() => applyFormat("orderedList")}
+            class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
+          >
+            Ordered
+          </button>
+        </div>
+
+        {/* Editor */}
+        <div class="flex-grow flex flex-col p-4 border border-gray-300 rounded-b-md bg-white">
+          <h1 class="text-2xl font-bold mb-4 border-b pb-2">
+            {selectedChapter()?.title || "Loading..."}
+          </h1>
+          <textarea
+            ref={textareaRef}
+            class="flex-grow w-full p-2 border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            placeholder="Start typing your markdown here..."
+            value={currentContent()}
+            onInput={(e) => setCurrentContent(e.currentTarget.value)}
+          />
+        </div>
+        <div class="mt-auto pt-2 flex justify-end">
+          <button
+            onClick={handleSave}
+            disabled={isSaving()}
+            class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {isSaving() ? "Saving..." : "Save Chapter"}
+          </button>
+        </div>
+      </div>
+    </Show>
+  );
+};
+
+export default EditorArea;

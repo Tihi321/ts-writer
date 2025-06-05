@@ -1,0 +1,25 @@
+{
+  "name": "tswritterclean",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Web-Based Markdown Editor for Writers",
+  "main": "index.js",
+  "scripts": {
+    "start:backend": "cd src/backend && yarn dev",
+    "start:frontend": "cd src/frontend && yarn dev",
+    "dev": "yarn start:backend & yarn start:frontend"
+  },
+  "keywords": [
+    "markdown",
+    "editor",
+    "writer",
+    "solidjs",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "ISC",
+  "workspaces": [
+    "src/frontend",
+    "src/backend"
+  ]
+}
