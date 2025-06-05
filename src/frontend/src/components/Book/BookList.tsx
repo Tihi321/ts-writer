@@ -8,9 +8,11 @@ const BookList: Component = () => {
   const handleCreateBook = async () => {
     if (newBookName().trim()) {
       try {
-        await bookService.createBook(newBookName().trim());
+        const bookName = newBookName().trim();
+        await bookService.createBook(bookName);
         setNewBookName("");
-        bookStore.refetchBooks(); // Refetch books to update the list
+        await bookStore.refetchBooks(); // Refetch books to update the list
+        bookStore.selectBook(bookName); // Select the new book
       } catch (error) {
         console.error("Failed to create book:", error);
         // Optionally, show an error message to the user

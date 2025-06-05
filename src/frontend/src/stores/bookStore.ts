@@ -12,7 +12,7 @@ const loadBooks = async () => {
     setBooks(bookList);
     if (bookList.length > 0) {
       // Automatically select the first book or use a saved preference
-      setSelectedBook(bookList[0]);
+      // setSelectedBook(bookList[0]);
     }
   } catch (error) {
     console.error("Failed to load books:", error);
