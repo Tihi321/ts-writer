@@ -45,10 +45,25 @@ const createNewIdea = async (text: string) => {
   }
 };
 
+const reorderIdeas = async (newOrder: string[]) => {
+  const book = bookStore.selectedBook();
+  const chapter = chapterStore.selectedChapter();
+  if (!book || !chapter) return;
+
+  try {
+    const result = await ideaService.reorderIdeas(book, chapter.id, newOrder);
+    setIdeas(result.ideas);
+  } catch (err) {
+    setError("Failed to reorder ideas.");
+    console.error(err);
+  }
+};
+
 export const ideaStore = {
   ideas,
   loading,
   error,
   createNewIdea,
+  reorderIdeas,
   // Add other idea actions (update, delete, reorder) as needed
 };

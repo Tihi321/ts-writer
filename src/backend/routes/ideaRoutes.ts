@@ -161,7 +161,10 @@ router.post("/reorder", async (req: Request, res: Response) => {
     });
 
     await saveBookConfig(req.bookName!, config);
-    res.status(200).json({ message: "Ideas reordered successfully" });
+    res.status(200).json({
+      message: "Ideas reordered successfully",
+      ideas: config.ideas[chapterId],
+    });
   } catch (error) {
     res.status(500).json({ message: "Error reordering ideas", error: (error as Error).message });
   }

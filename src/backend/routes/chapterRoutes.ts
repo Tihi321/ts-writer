@@ -174,7 +174,17 @@ router.post("/reorder", async (req: Request, res: Response) => {
 
     config.chapterOrder = chapterOrder;
     await saveBookConfig(req.bookName!, config);
-    res.status(200).json({ message: "Chapter order updated successfully" });
+
+    // Return the reordered chapters
+    const sortedChapters = config.chapterOrder
+      .map((id) => config.chapters.find((ch) => ch.id === id))
+      .filter(Boolean) as Chapter[];
+
+    res.status(200).json({
+      message: "Chapter order updated successfully",
+      chapterOrder,
+      chapters: sortedChapters,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error reordering chapters", error: (error as Error).message });
   }

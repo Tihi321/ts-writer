@@ -83,6 +83,20 @@ const updateChapter = async (id: string, content: string) => {
   }
 };
 
+const reorderChapters = async (newOrder: string[]) => {
+  const book = bookStore.selectedBook();
+  if (!book) return;
+
+  try {
+    const result = await chapterService.reorderChapters(book, newOrder);
+    // Update local state with the reordered chapters from the server
+    setChapters(result.chapters);
+  } catch (err) {
+    setError("Failed to reorder chapters.");
+    console.error(err);
+  }
+};
+
 export const chapterStore = {
   chapters,
   selectedChapter,
@@ -91,5 +105,6 @@ export const chapterStore = {
   selectChapter,
   createNewChapter,
   updateChapter,
+  reorderChapters,
   // Add other chapter actions (delete, reorder) as needed
 };

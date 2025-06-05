@@ -97,7 +97,7 @@ export const chapterService = {
   async reorderChapters(
     bookName: string,
     chapterOrder: string[]
-  ): Promise<{ message: string; chapterOrder: string[] }> {
+  ): Promise<{ message: string; chapterOrder: string[]; chapters: Chapter[] }> {
     try {
       const response = await fetch(`${API_BASE_URL}/${bookName}/chapters/reorder`, {
         method: "POST",

@@ -3,17 +3,31 @@ import { chapterStore } from "../../stores/chapterStore";
 import { ideaStore } from "../../stores/ideaStore";
 import { Idea } from "../../stores/types";
 
-const IdeaItem: Component<{ idea: Idea }> = (props) => {
-  // Simplified view, can add edit/delete functionality back as needed
+const IdeaItem: Component<{
+  idea: Idea;
+  onDragStart: (e: DragEvent, idea: Idea) => void;
+  onDragOver: (e: DragEvent) => void;
+  onDrop: (e: DragEvent, targetIdea: Idea) => void;
+}> = (props) => {
   return (
-    <div class="p-3 bg-yellow-100 border border-yellow-200 rounded-md shadow-sm">
-      <p class="text-sm text-yellow-800">{props.idea.text}</p>
+    <div
+      class="p-3 bg-yellow-100 border border-yellow-200 rounded-md shadow-sm cursor-pointer"
+      draggable={true}
+      onDragStart={(e) => props.onDragStart(e, props.idea)}
+      onDragOver={props.onDragOver}
+      onDrop={(e) => props.onDrop(e, props.idea)}
+    >
+      <div class="flex items-start">
+        <span class="mr-2 text-yellow-600 cursor-grab text-xs">⋮⋮</span>
+        <p class="text-sm text-yellow-800 flex-1">{props.idea.text}</p>
+      </div>
     </div>
   );
 };
 
 const IdeasSidebar: Component = () => {
   const [newIdeaText, setNewIdeaText] = createSignal("");
+  const [draggedIdea, setDraggedIdea] = createSignal<Idea | null>(null);
 
   const handleAddIdea = async () => {
     if (!newIdeaText().trim()) {
@@ -28,6 +42,56 @@ const IdeasSidebar: Component = () => {
       alert("Failed to add idea.");
       console.error(error);
     }
+  };
+
+  const handleDragStart = (e: DragEvent, idea: Idea) => {
+    setDraggedIdea(idea);
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", idea.id);
+    }
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = "move";
+    }
+  };
+
+  const handleDrop = async (e: DragEvent, targetIdea: Idea) => {
+    e.preventDefault();
+    const draggedIdeaItem = draggedIdea();
+
+    if (!draggedIdeaItem || draggedIdeaItem.id === targetIdea.id) {
+      setDraggedIdea(null);
+      return;
+    }
+
+    const currentIdeas = ideaStore.ideas();
+    const draggedIndex = currentIdeas.findIndex((i) => i.id === draggedIdeaItem.id);
+    const targetIndex = currentIdeas.findIndex((i) => i.id === targetIdea.id);
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDraggedIdea(null);
+      return;
+    }
+
+    // Create new order array
+    const newIdeas = [...currentIdeas];
+    const [removed] = newIdeas.splice(draggedIndex, 1);
+    newIdeas.splice(targetIndex, 0, removed);
+
+    // Extract the new order of IDs
+    const newOrder = newIdeas.map((idea) => idea.id);
+
+    try {
+      await ideaStore.reorderIdeas(newOrder);
+    } catch (error) {
+      console.error("Failed to reorder ideas:", error);
+    }
+
+    setDraggedIdea(null);
   };
 
   return (
@@ -53,7 +117,14 @@ const IdeasSidebar: Component = () => {
             each={ideaStore.ideas()}
             fallback={<p class="text-sm text-gray-400">No ideas for this chapter yet.</p>}
           >
-            {(idea: Idea) => <IdeaItem idea={idea} />}
+            {(idea: Idea) => (
+              <IdeaItem
+                idea={idea}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              />
+            )}
           </For>
         </div>
 
