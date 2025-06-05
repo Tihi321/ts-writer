@@ -796,23 +796,21 @@ const EditorArea: Component = () => {
 
         {/* Editor Area */}
         <div class="flex-grow flex flex-col p-6 bg-white overflow-y-auto">
-          <h1 class="text-3xl font-bold mb-6 text-gray-900 border-b border-gray-200 pb-3">
-            {chapterStore.selectedChapter()?.title || "Loading..."}
-          </h1>
-
           <Show
             when={mode() === "write"}
             fallback={
               /* Code Mode - Raw Markdown */
               <textarea
                 ref={textareaRef}
-                class="flex-grow w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-gray-50 font-mono text-sm text-gray-800 leading-relaxed"
+                class="flex-grow w-full p-4 resize-none bg-gray-50 font-mono text-sm text-gray-800 leading-relaxed"
                 placeholder="# Start writing your markdown here..."
                 value={currentContent()}
                 onInput={(e) => setCurrentContent(e.currentTarget.value)}
                 onBlur={handleAutoSave}
                 style={{
                   "line-height": "1.6em",
+                  border: "none",
+                  outline: "none",
                 }}
               />
             }
@@ -826,7 +824,7 @@ const EditorArea: Component = () => {
                 }
               }}
               contentEditable={true}
-              class="flex-grow w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white prose prose-lg max-w-none typewriter-text prose-clean text-gray-800 leading-relaxed outline-none"
+              class="flex-grow w-full p-4 resize-none bg-white prose prose-lg max-w-none typewriter-text prose-clean text-gray-800 leading-relaxed"
               onInput={handleEditableInput}
               onFocus={() => setIsUserEditing(true)}
               onBlur={() => {
@@ -836,6 +834,8 @@ const EditorArea: Component = () => {
               style={{
                 "line-height": "1.6em",
                 "min-height": "400px",
+                border: "none",
+                outline: "none",
               }}
             />
           </Show>
