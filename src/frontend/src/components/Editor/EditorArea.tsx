@@ -1,11 +1,18 @@
-import { Component, createEffect, createSignal, Show } from "solid-js";
+import { Component, createEffect, createSignal, Show, createMemo } from "solid-js";
 import { chapterStore, setChapterStore } from "../../stores/chapterStore";
 import { chapterService } from "../../services/chapterService";
 import { Chapter } from "../../stores/types";
+import { marked } from "marked";
+
+// Optional: Add Tailwind's typography plugin for better preview styling
+// npm install -D @tailwindcss/typography
+// Then add `require('@tailwindcss/typography')` to plugins in tailwind.config.js
+// The 'prose' class used below will then be available.
 
 const EditorArea: Component = () => {
   const [currentContent, setCurrentContent] = createSignal("");
   const [isSaving, setIsSaving] = createSignal(false);
+  const [mode, setMode] = createSignal<"edit" | "preview">("preview"); // Default to preview
   let textareaRef: HTMLTextAreaElement | undefined;
 
   const selectedChapter = (): Chapter | undefined => {
@@ -16,6 +23,7 @@ const EditorArea: Component = () => {
   createEffect(() => {
     if (chapterStore.selectedChapterContent !== null) {
       setCurrentContent(chapterStore.selectedChapterContent);
+      setMode("preview"); // Default to preview mode when a chapter is selected
     } else {
       setCurrentContent(""); // Clear content if no chapter is selected or content is null
     }
@@ -130,6 +138,14 @@ const EditorArea: Component = () => {
     }
   };
 
+  // Use a memo to parse markdown only when content changes
+  const parsedContent = createMemo(() => {
+    // In a real-world app, you might want to sanitize this HTML
+    // to prevent XSS if content could come from untrusted sources.
+    // Since this is local content written by the user, the risk is minimal.
+    return marked(currentContent());
+  });
+
   return (
     <Show
       when={chapterStore.selectedChapterId}
@@ -140,59 +156,87 @@ const EditorArea: Component = () => {
       }
     >
       <div class="flex flex-col h-full">
-        {/* Toolbar - Remains a placeholder for now */}
-        <div class="p-2 border-b border-gray-300 bg-gray-50 mb-2 rounded-t-md flex items-center space-x-2">
-          <span class="font-semibold text-gray-700 mr-2">Toolbar:</span>
-          <button
-            onClick={() => applyFormat("bold")}
-            class="px-2 py-1 text-sm font-bold hover:bg-gray-200 rounded"
-          >
-            B
-          </button>
-          <button
-            onClick={() => applyFormat("italic")}
-            class="px-2 py-1 text-sm italic hover:bg-gray-200 rounded"
-          >
-            I
-          </button>
-          <button
-            onClick={() => applyFormat("h1")}
-            class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
-          >
-            H1
-          </button>
-          <button
-            onClick={() => applyFormat("h2")}
-            class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
-          >
-            H2
-          </button>
-          <button
-            onClick={() => applyFormat("bulletList")}
-            class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
-          >
-            Bullets
-          </button>
-          <button
-            onClick={() => applyFormat("orderedList")}
-            class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
-          >
-            Ordered
-          </button>
+        <div class="p-2 border-b border-gray-300 bg-gray-50 mb-2 rounded-t-md flex items-center justify-between">
+          {/* Toolbar */}
+          <div class="flex items-center space-x-2">
+            <Show when={mode() === "edit"}>
+              <span class="font-semibold text-gray-700 mr-2">Toolbar:</span>
+              <button
+                onClick={() => applyFormat("bold")}
+                class="px-2 py-1 text-sm font-bold hover:bg-gray-200 rounded"
+              >
+                B
+              </button>
+              <button
+                onClick={() => applyFormat("italic")}
+                class="px-2 py-1 text-sm italic hover:bg-gray-200 rounded"
+              >
+                I
+              </button>
+              <button
+                onClick={() => applyFormat("h1")}
+                class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
+              >
+                H1
+              </button>
+              <button
+                onClick={() => applyFormat("h2")}
+                class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
+              >
+                H2
+              </button>
+              <button
+                onClick={() => applyFormat("bulletList")}
+                class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
+              >
+                Bullets
+              </button>
+              <button
+                onClick={() => applyFormat("orderedList")}
+                class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
+              >
+                Ordered
+              </button>
+            </Show>
+          </div>
+          {/* Mode Toggle */}
+          <div class="flex items-center">
+            <button
+              onClick={() => setMode("edit")}
+              class={`px-3 py-1 text-sm rounded-l-md ${
+                mode() === "edit" ? "bg-blue-500 text-white" : "bg-gray-200"
+              }`}
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => setMode("preview")}
+              class={`px-3 py-1 text-sm rounded-r-md ${
+                mode() === "preview" ? "bg-blue-500 text-white" : "bg-gray-200"
+              }`}
+            >
+              Preview
+            </button>
+          </div>
         </div>
 
-        {/* Editor */}
-        <div class="flex-grow flex flex-col p-4 border border-gray-300 rounded-b-md bg-white">
-          <h1 class="text-2xl font-bold mb-4 border-b pb-2">
+        {/* Editor or Preview Pane */}
+        <div class="flex-grow flex flex-col p-4 border border-gray-300 rounded-b-md bg-white overflow-y-auto">
+          <h1 class="text-2xl font-bold mb-4 border-b pb-2 flex-shrink-0">
             {selectedChapter()?.title || "Loading..."}
           </h1>
-          <textarea
-            ref={textareaRef}
-            class="flex-grow w-full p-2 border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            placeholder="Start typing your markdown here..."
-            value={currentContent()}
-            onInput={(e) => setCurrentContent(e.currentTarget.value)}
-          />
+          <Show
+            when={mode() === "edit"}
+            fallback={<div class="prose max-w-none" innerHTML={parsedContent()} />}
+          >
+            <textarea
+              ref={textareaRef}
+              class="flex-grow w-full p-2 border-none focus:ring-0 focus:outline-none resize-none"
+              placeholder="Start typing your markdown here..."
+              value={currentContent()}
+              onInput={(e) => setCurrentContent(e.currentTarget.value)}
+            />
+          </Show>
         </div>
         <div class="mt-auto pt-2 flex justify-end">
           <button

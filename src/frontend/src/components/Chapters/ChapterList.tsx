@@ -1,4 +1,4 @@
-import { Component, createSignal, For, onMount, Show, createEffect } from "solid-js";
+import { Component, createSignal, For, onMount, Show, createEffect, onCleanup } from "solid-js";
 import { chapterStore, setChapterStore } from "../../stores/chapterStore";
 import { chapterService } from "../../services/chapterService";
 import { Chapter } from "../../stores/types";
@@ -14,6 +14,39 @@ import {
 const SortableChapter = (props: { chapter: Chapter; onSelect: (id: string) => void }) => {
   const sortable = createSortable(props.chapter.id);
   const isSelected = () => props.chapter.id === chapterStore.selectedChapterId;
+  const [isRenaming, setIsRenaming] = createSignal(false);
+  const [renameText, setRenameText] = createSignal(props.chapter.title);
+  let renameInputRef: HTMLInputElement | undefined;
+
+  const handleRename = async () => {
+    if (!isRenaming()) return;
+    setIsRenaming(false);
+    if (renameText().trim() && renameText() !== props.chapter.title) {
+      try {
+        // Optimistically update the store
+        const oldTitle = props.chapter.title;
+        setChapterStore("chapters", (ch) => ch.id === props.chapter.id, "title", renameText());
+
+        await chapterService.updateChapter(props.chapter.id, { title: renameText() });
+      } catch (error) {
+        alert("Failed to rename chapter.");
+        // Revert if error
+        setChapterStore(
+          "chapters",
+          (ch) => ch.id === props.chapter.id,
+          "title",
+          props.chapter.title
+        );
+      }
+    }
+  };
+
+  createEffect(() => {
+    if (isRenaming()) {
+      renameInputRef?.focus();
+      renameInputRef?.select();
+    }
+  });
 
   return (
     <div
@@ -29,8 +62,24 @@ const SortableChapter = (props: { chapter: Chapter; onSelect: (id: string) => vo
         transition: "transform 0.2s",
       }}
       onClick={() => props.onSelect(props.chapter.id)}
+      onDblClick={() => setIsRenaming(true)}
     >
-      {props.chapter.title}
+      <Show
+        when={!isRenaming()}
+        fallback={
+          <input
+            ref={renameInputRef}
+            type="text"
+            value={renameText()}
+            onInput={(e) => setRenameText(e.currentTarget.value)}
+            onBlur={handleRename}
+            onKeyDown={(e) => e.key === "Enter" && handleRename()}
+            class="w-full bg-transparent p-0 m-0 border-0 focus:ring-0"
+          />
+        }
+      >
+        {props.chapter.title}
+      </Show>
     </div>
   );
 };
