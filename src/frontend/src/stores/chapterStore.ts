@@ -83,6 +83,56 @@ const updateChapter = async (id: string, content: string) => {
   }
 };
 
+const updateChapterTitle = async (id: string, title: string) => {
+  const book = bookStore.selectedBook();
+  if (!book) return;
+
+  try {
+    const updatedChapter = await chapterService.updateChapter(book, id, { title });
+
+    // Update the chapter in the main list
+    const currentChapters = chapters();
+    const index = currentChapters.findIndex((c) => c.id === id);
+    if (index !== -1) {
+      const newChapters = [...currentChapters];
+      newChapters[index] = { ...newChapters[index], title };
+      setChapters(newChapters);
+    }
+
+    // Update selected chapter if it's the one being updated
+    if (selectedChapter()?.id === id) {
+      setSelectedChapter(updatedChapter);
+    }
+
+    return updatedChapter;
+  } catch (err) {
+    setError("Failed to update chapter title.");
+    console.error(err);
+  }
+};
+
+const deleteChapter = async (id: string) => {
+  const book = bookStore.selectedBook();
+  if (!book) return;
+
+  try {
+    await chapterService.deleteChapter(book, id);
+
+    // Remove chapter from the list
+    const currentChapters = chapters();
+    const newChapters = currentChapters.filter((c) => c.id !== id);
+    setChapters(newChapters);
+
+    // Clear selected chapter if it was the deleted one
+    if (selectedChapter()?.id === id) {
+      setSelectedChapter(null);
+    }
+  } catch (err) {
+    setError("Failed to delete chapter.");
+    console.error(err);
+  }
+};
+
 const reorderChapters = async (newOrder: string[]) => {
   const book = bookStore.selectedBook();
   if (!book) return;
@@ -105,6 +155,8 @@ export const chapterStore = {
   selectChapter,
   createNewChapter,
   updateChapter,
+  updateChapterTitle,
+  deleteChapter,
   reorderChapters,
   // Add other chapter actions (delete, reorder) as needed
 };

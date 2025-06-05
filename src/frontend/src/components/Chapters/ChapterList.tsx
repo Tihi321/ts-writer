@@ -8,25 +8,167 @@ const ChapterItem: Component<{
   onDragOver: (e: DragEvent) => void;
   onDrop: (e: DragEvent, targetChapter: Chapter) => void;
 }> = (props) => {
+  const [isEditing, setIsEditing] = createSignal(false);
+  const [editTitle, setEditTitle] = createSignal(props.chapter.title);
+  const [showDeleteConfirm, setShowDeleteConfirm] = createSignal(false);
+
   const isSelected = () => chapterStore.selectedChapter()?.id === props.chapter.id;
+
+  const handleEdit = () => {
+    setEditTitle(props.chapter.title);
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editTitle().trim()) {
+      alert("Chapter title cannot be empty.");
+      return;
+    }
+
+    if (editTitle().trim() === props.chapter.title) {
+      setIsEditing(false);
+      return;
+    }
+
+    try {
+      await chapterStore.updateChapterTitle(props.chapter.id, editTitle().trim());
+      setIsEditing(false);
+    } catch (error) {
+      alert("Failed to update chapter title.");
+      console.error(error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditTitle(props.chapter.title);
+    setIsEditing(false);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await chapterStore.deleteChapter(props.chapter.id);
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      alert("Failed to delete chapter.");
+      console.error(error);
+    }
+  };
+
+  const handleKeyPress = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSaveEdit();
+    } else if (e.key === "Escape") {
+      handleCancelEdit();
+    }
+  };
 
   return (
     <div
-      class="p-2 rounded cursor-pointer transition-colors select-none"
+      class="p-2 rounded cursor-pointer transition-colors select-none group relative"
       classList={{
         "bg-blue-100 border-l-4 border-blue-500 font-semibold text-blue-700": isSelected(),
         "hover:bg-blue-100 text-gray-600": !isSelected(),
       }}
-      draggable={true}
-      onDragStart={(e) => props.onDragStart(e, props.chapter)}
+      draggable={!isEditing()}
+      onDragStart={(e) => !isEditing() && props.onDragStart(e, props.chapter)}
       onDragOver={props.onDragOver}
       onDrop={(e) => props.onDrop(e, props.chapter)}
-      onClick={() => chapterStore.selectChapter(props.chapter.id)}
+      onClick={() => !isEditing() && chapterStore.selectChapter(props.chapter.id)}
     >
       <div class="flex items-center">
-        <span class="mr-2 text-gray-400 cursor-grab">⋮⋮</span>
-        {props.chapter.title}
+        <Show when={!isEditing()}>
+          <span class="mr-2 text-gray-400 cursor-grab">⋮⋮</span>
+        </Show>
+
+        <Show
+          when={isEditing()}
+          fallback={
+            <div class="flex-1 flex items-center justify-between">
+              <span>{props.chapter.title}</span>
+              <div class="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1 ml-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit();
+                  }}
+                  class="text-blue-500 hover:text-blue-700 text-sm p-1"
+                  title="Edit chapter title"
+                >
+                  ✏️
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteConfirm(true);
+                  }}
+                  class="text-red-500 hover:text-red-700 text-sm p-1"
+                  title="Delete chapter"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+          }
+        >
+          <div class="flex-1 flex items-center space-x-2">
+            <input
+              type="text"
+              value={editTitle()}
+              onInput={(e) => setEditTitle(e.currentTarget.value)}
+              onKeyDown={handleKeyPress}
+              class="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+              onClick={(e) => e.stopPropagation()}
+              autofocus
+            />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSaveEdit();
+              }}
+              class="text-green-600 hover:text-green-800 text-sm p-1"
+              title="Save"
+            >
+              ✓
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCancelEdit();
+              }}
+              class="text-gray-500 hover:text-gray-700 text-sm p-1"
+              title="Cancel"
+            >
+              ✕
+            </button>
+          </div>
+        </Show>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Show when={showDeleteConfirm()}>
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Delete Chapter</h3>
+            <p class="text-gray-600 mb-6">
+              Are you sure you want to delete "{props.chapter.title}"? This action cannot be undone.
+            </p>
+            <div class="flex space-x-3">
+              <button
+                onClick={handleDelete}
+                class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </Show>
     </div>
   );
 };

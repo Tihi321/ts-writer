@@ -45,6 +45,48 @@ const createNewIdea = async (text: string) => {
   }
 };
 
+const updateIdea = async (ideaId: string, text: string) => {
+  const book = bookStore.selectedBook();
+  const chapter = chapterStore.selectedChapter();
+  if (!book || !chapter) return;
+
+  try {
+    const updatedIdea = await ideaService.updateIdea(book, chapter.id, ideaId, { text });
+
+    // Update the idea in the list
+    const currentIdeas = ideas();
+    const index = currentIdeas.findIndex((i) => i.id === ideaId);
+    if (index !== -1) {
+      const newIdeas = [...currentIdeas];
+      newIdeas[index] = updatedIdea;
+      setIdeas(newIdeas);
+    }
+
+    return updatedIdea;
+  } catch (err) {
+    setError("Failed to update idea.");
+    console.error(err);
+  }
+};
+
+const deleteIdea = async (ideaId: string) => {
+  const book = bookStore.selectedBook();
+  const chapter = chapterStore.selectedChapter();
+  if (!book || !chapter) return;
+
+  try {
+    await ideaService.deleteIdea(book, chapter.id, ideaId);
+
+    // Remove idea from the list
+    const currentIdeas = ideas();
+    const newIdeas = currentIdeas.filter((i) => i.id !== ideaId);
+    setIdeas(newIdeas);
+  } catch (err) {
+    setError("Failed to delete idea.");
+    console.error(err);
+  }
+};
+
 const reorderIdeas = async (newOrder: string[]) => {
   const book = bookStore.selectedBook();
   const chapter = chapterStore.selectedChapter();
@@ -64,6 +106,8 @@ export const ideaStore = {
   loading,
   error,
   createNewIdea,
+  updateIdea,
+  deleteIdea,
   reorderIdeas,
   // Add other idea actions (update, delete, reorder) as needed
 };
