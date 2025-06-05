@@ -2,6 +2,7 @@ import { Component, createEffect, createSignal, Show, createMemo } from "solid-j
 import { chapterStore } from "../../stores/chapterStore";
 import { Chapter } from "../../stores/types";
 import { marked } from "marked";
+import { uiStore } from "../../stores/uiStore";
 
 // Optional: Add Tailwind's typography plugin for better preview styling
 // npm install -D @tailwindcss/typography
@@ -25,6 +26,7 @@ const EditorArea: Component = () => {
     }
   });
 
+  // Save functionality
   const handleSave = async () => {
     const chapter = chapterStore.selectedChapter();
     if (!chapter) return;
@@ -32,13 +34,22 @@ const EditorArea: Component = () => {
     setIsSaving(true);
     try {
       await chapterStore.updateChapter(chapter.id, currentContent());
-      // Optionally, show a success message
-      alert("Chapter saved successfully!");
+      // Show success message for manual saves
+      if (!uiStore.autoSaveEnabled()) {
+        alert("Chapter saved successfully!");
+      }
     } catch (error) {
+      console.error("Failed to save chapter:", error);
       alert("Failed to save chapter.");
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Autosave functionality - only triggers if autosave is enabled
+  const handleAutoSave = async () => {
+    if (!uiStore.autoSaveEnabled()) return;
+    await handleSave();
   };
 
   const toggleFormat = (wrapChar: string) => {
@@ -109,10 +120,47 @@ const EditorArea: Component = () => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
 
+    const currentMarkdown = currentContent();
+
+    // For heading formats, we need to work with the entire line
+    if (formatType === "h1" || formatType === "h2" || formatType === "h3") {
+      const selectedText = selection.toString();
+      if (!selectedText) return;
+
+      // Find the line containing the selected text
+      const lines = currentMarkdown.split("\n");
+      let targetLineIndex = -1;
+      let targetLine = "";
+
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].includes(selectedText)) {
+          targetLineIndex = i;
+          targetLine = lines[i];
+          break;
+        }
+      }
+
+      if (targetLineIndex === -1) return;
+
+      const prefix = formatType === "h1" ? "# " : formatType === "h2" ? "## " : "### ";
+
+      // Check if the line already starts with the prefix to toggle it off
+      if (targetLine.startsWith(prefix)) {
+        lines[targetLineIndex] = targetLine.substring(prefix.length);
+      } else {
+        // Remove other header formats before adding the new one
+        const cleanedLine = targetLine.replace(/^(#+\s)/, "");
+        lines[targetLineIndex] = `${prefix}${cleanedLine}`;
+      }
+
+      const newMarkdown = lines.join("\n");
+      setCurrentContent(newMarkdown);
+      return;
+    }
+
+    // For other formats, work with selected text
     const selectedText = selection.toString().trim();
     if (!selectedText) return;
-
-    const currentMarkdown = currentContent();
 
     // Check if the selected text is already formatted in the markdown
     const isAlreadyFormatted = (text: string, format: string) => {
@@ -173,14 +221,125 @@ const EditorArea: Component = () => {
         }
         break;
 
+      case "blockquote":
+        // Find the line containing the selected text
+        const lines = currentMarkdown.split("\n");
+        let targetLineIndex = -1;
+        let targetLine = "";
+
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i].includes(selectedText)) {
+            targetLineIndex = i;
+            targetLine = lines[i];
+            break;
+          }
+        }
+
+        if (targetLineIndex !== -1) {
+          if (targetLine.startsWith("> ")) {
+            lines[targetLineIndex] = targetLine.substring(2);
+          } else {
+            lines[targetLineIndex] = `> ${targetLine}`;
+          }
+          newMarkdown = lines.join("\n");
+        }
+        break;
+
+      case "bulletList":
+        // Find lines containing the selected text
+        const bulletLines = currentMarkdown.split("\n");
+        const selectedLines = [];
+
+        for (let i = 0; i < bulletLines.length; i++) {
+          if (bulletLines[i].includes(selectedText)) {
+            selectedLines.push(i);
+          }
+        }
+
+        if (selectedLines.length > 0) {
+          const isBulleted = selectedLines.every((i) => /^\s*-\s/.test(bulletLines[i]));
+
+          selectedLines.forEach((i) => {
+            if (isBulleted) {
+              bulletLines[i] = bulletLines[i].replace(/^\s*-\s?/, "");
+            } else {
+              bulletLines[i] = bulletLines[i].trim() === "" ? "" : `- ${bulletLines[i]}`;
+            }
+          });
+
+          newMarkdown = bulletLines.join("\n");
+        }
+        break;
+
+      case "orderedList":
+        // Find lines containing the selected text
+        const orderedLines = currentMarkdown.split("\n");
+        const selectedOrderedLines = [];
+
+        for (let i = 0; i < orderedLines.length; i++) {
+          if (orderedLines[i].includes(selectedText)) {
+            selectedOrderedLines.push(i);
+          }
+        }
+
+        if (selectedOrderedLines.length > 0) {
+          const isNumbered = selectedOrderedLines.every((i) => /^\s*\d+\.\s/.test(orderedLines[i]));
+
+          if (isNumbered) {
+            selectedOrderedLines.forEach((i) => {
+              orderedLines[i] = orderedLines[i].replace(/^\s*\d+\.\s?/, "");
+            });
+          } else {
+            let count = 1;
+            selectedOrderedLines.forEach((i) => {
+              if (orderedLines[i].trim() !== "") {
+                orderedLines[i] = `${count++}. ${orderedLines[i]}`;
+              }
+            });
+          }
+
+          newMarkdown = orderedLines.join("\n");
+        }
+        break;
+
+      case "link":
+        const linkText = selectedText || "link text";
+        const linkFormat = `[${linkText}](url)`;
+        newMarkdown = newMarkdown.replace(selectedText, linkFormat);
+        break;
+
       case "clear":
-        // Remove all formatting from selected text
-        let cleanText = selectedText;
-        cleanText = cleanText.replace(/\*\*(.*?)\*\*/g, "$1");
-        cleanText = cleanText.replace(/\*(.*?)\*/g, "$1");
-        cleanText = cleanText.replace(/~~(.*?)~~/g, "$1");
-        cleanText = cleanText.replace(/`(.*?)`/g, "$1");
-        newMarkdown = newMarkdown.replace(selectedText, cleanText);
+        // For clear formatting, we need to work with the entire markdown content
+        // and clean all lines that contain the selected text
+        const clearLines = currentMarkdown.split("\n");
+        let hasChanges = false;
+
+        for (let i = 0; i < clearLines.length; i++) {
+          if (clearLines[i].includes(selectedText)) {
+            const originalLine = clearLines[i];
+            let cleanedLine = originalLine;
+
+            // Remove all markdown formatting from this line
+            cleanedLine = cleanedLine.replace(/\*\*(.*?)\*\*/g, "$1"); // Remove bold
+            cleanedLine = cleanedLine.replace(/\*(.*?)\*/g, "$1"); // Remove italic
+            cleanedLine = cleanedLine.replace(/~~(.*?)~~/g, "$1"); // Remove strikethrough
+            cleanedLine = cleanedLine.replace(/`(.*?)`/g, "$1"); // Remove inline code
+            cleanedLine = cleanedLine.replace(/\[(.*?)\]\(.*?\)/g, "$1"); // Remove links
+            cleanedLine = cleanedLine.replace(/^#{1,6}\s/, ""); // Remove headers
+            cleanedLine = cleanedLine.replace(/^>\s?/, ""); // Remove blockquotes
+            cleanedLine = cleanedLine.replace(/^[-*+]\s/, ""); // Remove bullet lists
+            cleanedLine = cleanedLine.replace(/^\d+\.\s/, ""); // Remove ordered lists
+
+            if (cleanedLine !== originalLine) {
+              clearLines[i] = cleanedLine;
+              hasChanges = true;
+            }
+          }
+        }
+
+        if (hasChanges) {
+          newMarkdown = clearLines.join("\n");
+        }
         break;
     }
 
@@ -279,8 +438,9 @@ const EditorArea: Component = () => {
         .replace(/\*(.*?)\*/g, "$1") // Remove italic
         .replace(/~~(.*?)~~/g, "$1") // Remove strikethrough
         .replace(/`(.*?)`/g, "$1") // Remove inline code
+        .replace(/\[(.*?)\]\(.*?\)/g, "$1") // Remove links
         .replace(/^#{1,6}\s/gm, "") // Remove headers
-        .replace(/^>\s/gm, "") // Remove blockquotes
+        .replace(/^>\s?/gm, "") // Remove blockquotes
         .replace(/^[-*+]\s/gm, "") // Remove bullet lists
         .replace(/^\d+\.\s/gm, ""); // Remove ordered lists
 
@@ -650,6 +810,7 @@ const EditorArea: Component = () => {
                 placeholder="# Start writing your markdown here..."
                 value={currentContent()}
                 onInput={(e) => setCurrentContent(e.currentTarget.value)}
+                onBlur={handleAutoSave}
                 style={{
                   "line-height": "1.6em",
                 }}
@@ -668,7 +829,10 @@ const EditorArea: Component = () => {
               class="flex-grow w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white prose prose-lg max-w-none typewriter-text prose-clean text-gray-800 leading-relaxed outline-none"
               onInput={handleEditableInput}
               onFocus={() => setIsUserEditing(true)}
-              onBlur={() => setTimeout(() => setIsUserEditing(false), 100)}
+              onBlur={() => {
+                setTimeout(() => setIsUserEditing(false), 100);
+                handleAutoSave();
+              }}
               style={{
                 "line-height": "1.6em",
                 "min-height": "400px",
@@ -677,15 +841,31 @@ const EditorArea: Component = () => {
           </Show>
         </div>
 
-        {/* Save Button */}
-        <div class="p-4 bg-gray-50 border-t border-gray-200 flex justify-end">
-          <button
-            onClick={handleSave}
-            disabled={isSaving()}
-            class="bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm"
-          >
-            {isSaving() ? "💾 Saving..." : "💾 Save Chapter"}
-          </button>
+        {/* Save Button and Status */}
+        <div class="border-t border-gray-200 bg-gray-50">
+          <Show when={isSaving()}>
+            <div class="p-2 bg-blue-50 border-b border-blue-200 flex justify-center">
+              <span class="text-xs text-blue-600 font-medium">💾 Saving...</span>
+            </div>
+          </Show>
+
+          <Show when={!uiStore.autoSaveEnabled()}>
+            <div class="p-4 flex justify-end">
+              <button
+                onClick={handleSave}
+                disabled={isSaving()}
+                class="bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm"
+              >
+                {isSaving() ? "💾 Saving..." : "💾 Save Chapter"}
+              </button>
+            </div>
+          </Show>
+
+          <Show when={uiStore.autoSaveEnabled()}>
+            <div class="p-2 flex justify-center">
+              <span class="text-xs text-gray-500 font-medium">✨ Autosave enabled</span>
+            </div>
+          </Show>
         </div>
       </div>
     </Show>

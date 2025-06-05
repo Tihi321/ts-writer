@@ -1,4 +1,6 @@
 import type { Component, JSX } from "solid-js";
+import { Show } from "solid-js";
+import { uiStore } from "@stores/uiStore";
 
 interface MainLayoutProps {
   chaptersPanel: JSX.Element;
@@ -8,19 +10,25 @@ interface MainLayoutProps {
 
 const MainLayout: Component<MainLayoutProps> = (props) => {
   return (
-    <div class="flex h-screen bg-gray-100">
+    <div class="flex h-full bg-gray-100">
       {/* Chapters Panel (Left) */}
-      <aside class="w-1/4 bg-gray-50 p-4 border-r border-gray-300 overflow-y-auto">
-        {props.chaptersPanel}
-      </aside>
+      <Show when={uiStore.showChapters()}>
+        <aside class="w-1/4 bg-gray-50 p-4 border-r border-gray-300 overflow-y-auto transition-all duration-300">
+          {props.chaptersPanel}
+        </aside>
+      </Show>
 
       {/* Editor Panel (Center) */}
-      <main class="flex-1 p-4 flex flex-col overflow-y-auto">{props.editorPanel}</main>
+      <main class="flex-1 p-4 flex flex-col overflow-y-auto transition-all duration-300">
+        {props.editorPanel}
+      </main>
 
       {/* Ideas Panel (Right) */}
-      <aside class="w-1/4 bg-gray-50 p-4 border-l border-gray-300 overflow-y-auto">
-        {props.ideasPanel}
-      </aside>
+      <Show when={uiStore.showIdeas()}>
+        <aside class="w-1/4 bg-gray-50 p-4 border-l border-gray-300 overflow-y-auto transition-all duration-300">
+          {props.ideasPanel}
+        </aside>
+      </Show>
     </div>
   );
 };
