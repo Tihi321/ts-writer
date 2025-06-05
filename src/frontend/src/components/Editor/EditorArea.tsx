@@ -30,10 +30,9 @@ const EditorArea: Component = () => {
 
     setIsSaving(true);
     try {
-      // Assuming chapterStore will have an updateChapter method
-      // For now, let's call service directly and update store manually
-      // await chapterStore.updateChapter(chapter.id, { content: currentContent() });
-      alert("Save functionality to be implemented in chapterStore.");
+      await chapterStore.updateChapter(chapter.id, currentContent());
+      // Optionally, show a success message
+      alert("Chapter saved successfully!");
     } catch (error) {
       alert("Failed to save chapter.");
     } finally {
@@ -41,31 +40,63 @@ const EditorArea: Component = () => {
     }
   };
 
+  const toggleFormat = (wrapChar: string) => {
+    if (!textareaRef) return;
+    const start = textareaRef.selectionStart;
+    const end = textareaRef.selectionEnd;
+    const selectedText = textareaRef.value.substring(start, end);
+    const currentValue = textareaRef.value;
+
+    const before = currentValue.substring(0, start);
+    const after = currentValue.substring(end);
+
+    const isWrapped = before.endsWith(wrapChar) && after.startsWith(wrapChar);
+
+    if (isWrapped) {
+      // Unwrap
+      const newText =
+        before.substring(0, before.length - wrapChar.length) +
+        selectedText +
+        after.substring(wrapChar.length);
+      setCurrentContent(newText);
+      setTimeout(() => {
+        textareaRef?.focus();
+        textareaRef?.setSelectionRange(start - wrapChar.length, end - wrapChar.length);
+      }, 0);
+    } else {
+      // Wrap
+      const newText = `${before}${wrapChar}${selectedText}${wrapChar}${after}`;
+      setCurrentContent(newText);
+      setTimeout(() => {
+        textareaRef?.focus();
+        textareaRef?.setSelectionRange(start + wrapChar.length, end + wrapChar.length);
+      }, 0);
+    }
+  };
+
   const applyFormat = (
-    formatType: "bold" | "italic" | "h1" | "h2" | "bulletList" | "orderedList"
+    formatType: "bold" | "italic" | "h1" | "h2" | "bulletList" | "orderedList" | "code"
   ) => {
     if (!textareaRef) return;
+
+    if (formatType === "bold") {
+      toggleFormat("**");
+      return;
+    }
+    if (formatType === "italic") {
+      toggleFormat("*");
+      return;
+    }
+    if (formatType === "code") {
+      toggleFormat("`");
+      return;
+    }
 
     const start = textareaRef.selectionStart;
     const end = textareaRef.selectionEnd;
     const currentValue = textareaRef.value;
 
-    if (formatType === "bold" || formatType === "italic") {
-      const wrapChar = formatType === "bold" ? "**" : "*";
-      const selectedText = currentValue.substring(start, end);
-      const newText = `${currentValue.substring(
-        0,
-        start
-      )}${wrapChar}${selectedText}${wrapChar}${currentValue.substring(end)}`;
-      setCurrentContent(newText);
-
-      // Focus and set cursor after the formatted text
-      setTimeout(() => {
-        textareaRef?.focus();
-        const newCursorPos = end + wrapChar.length * 2;
-        textareaRef?.setSelectionRange(newCursorPos, newCursorPos);
-      }, 0);
-    } else if (formatType === "h1" || formatType === "h2") {
+    if (formatType === "h1" || formatType === "h2") {
       const lineStart = currentValue.lastIndexOf("\n", start - 1) + 1;
       const lineEnd = currentValue.indexOf("\n", start);
       const currentLine = currentValue.substring(lineStart, lineEnd === -1 ? undefined : lineEnd);
@@ -183,6 +214,12 @@ const EditorArea: Component = () => {
                 class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
               >
                 Ordered
+              </button>
+              <button
+                onClick={() => applyFormat("code")}
+                class="px-2 py-1 text-sm font-mono hover:bg-gray-200 rounded"
+              >
+                Code
               </button>
             </Show>
           </div>

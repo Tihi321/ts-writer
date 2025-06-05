@@ -58,6 +58,31 @@ const createNewChapter = async (title: string) => {
   }
 };
 
+const updateChapter = async (id: string, content: string) => {
+  const book = bookStore.selectedBook();
+  if (!book) return;
+
+  try {
+    const updatedChapter = await chapterService.updateChapter(book, id, { content });
+    setSelectedChapter(updatedChapter);
+
+    // Also update the chapter in the main list if needed (for previews, etc.)
+    const currentChapters = chapters();
+    const index = currentChapters.findIndex((c) => c.id === id);
+    if (index !== -1) {
+      // Note: The list contains `Chapter`, but `updateChapter` returns `ChapterWithContent`.
+      // We only need to update fields present in `Chapter`.
+      const newChapters = [...currentChapters];
+      newChapters[index] = { ...newChapters[index], ...updatedChapter }; // this might need adjustment based on returned object
+      setChapters(newChapters);
+    }
+    return updatedChapter;
+  } catch (err) {
+    setError("Failed to update chapter.");
+    console.error(err);
+  }
+};
+
 export const chapterStore = {
   chapters,
   selectedChapter,
@@ -65,5 +90,6 @@ export const chapterStore = {
   error,
   selectChapter,
   createNewChapter,
-  // Add other chapter actions (update, delete, reorder) as needed
+  updateChapter,
+  // Add other chapter actions (delete, reorder) as needed
 };
