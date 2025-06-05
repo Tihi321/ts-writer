@@ -17,15 +17,21 @@ const App: Component = () => {
 
   return (
     <DragDropProvider>
-      <div class="flex flex-col h-screen">
-        <header class="bg-gray-800 text-white p-3 shadow-md z-10 flex justify-between items-center">
-          <h1 class="text-xl font-semibold">TSWritter</h1>
+      <div class="flex flex-col h-screen bg-gray-50">
+        <header class="bg-white text-gray-900 p-4 shadow-sm z-10 flex justify-between items-center border-b border-gray-200">
+          <div class="flex items-center space-x-3">
+            <div class="text-2xl">📝</div>
+            <h1 class="text-2xl font-semibold tracking-tight">TSWritter</h1>
+            <div class="text-sm text-gray-500 font-medium hidden sm:block">
+              A Writer's Companion
+            </div>
+          </div>
           <Show when={bookStore.selectedBook()}>
             <button
               onClick={handleBackToBooks}
-              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              class="bg-gray-900 hover:bg-gray-800 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 shadow-sm"
             >
-              Back to Books
+              ← Back to Books
             </button>
           </Show>
         </header>

@@ -168,107 +168,138 @@ const EditorArea: Component = () => {
     <Show
       when={chapterStore.selectedChapter()}
       fallback={
-        <div class="flex items-center justify-center h-full text-gray-500">
-          Select a chapter to start editing.
+        <div class="flex items-center justify-center h-full text-gray-500 bg-white">
+          <div class="text-center p-8">
+            <div class="text-6xl mb-4">📖</div>
+            <p class="font-medium text-lg text-gray-700">Select a chapter to start writing</p>
+            <p class="text-sm text-gray-500 mt-2">Your story awaits...</p>
+          </div>
         </div>
       }
     >
-      <div class="flex flex-col h-full">
-        <div class="p-2 border-b border-gray-300 bg-gray-50 mb-2 rounded-t-md flex items-center justify-between">
-          {/* Toolbar */}
-          <div class="flex items-center space-x-2">
+      <div class="flex flex-col h-full bg-white">
+        {/* Clean Toolbar */}
+        <div class="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
             <Show when={mode() === "edit"}>
-              <span class="font-semibold text-gray-700 mr-2">Toolbar:</span>
-              <button
-                onClick={() => applyFormat("bold")}
-                class="px-2 py-1 text-sm font-bold hover:bg-gray-200 rounded"
-              >
-                B
-              </button>
-              <button
-                onClick={() => applyFormat("italic")}
-                class="px-2 py-1 text-sm italic hover:bg-gray-200 rounded"
-              >
-                I
-              </button>
-              <button
-                onClick={() => applyFormat("h1")}
-                class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
-              >
-                H1
-              </button>
-              <button
-                onClick={() => applyFormat("h2")}
-                class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
-              >
-                H2
-              </button>
-              <button
-                onClick={() => applyFormat("bulletList")}
-                class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
-              >
-                Bullets
-              </button>
-              <button
-                onClick={() => applyFormat("orderedList")}
-                class="px-2 py-1 text-sm font-semibold hover:bg-gray-200 rounded"
-              >
-                Ordered
-              </button>
-              <button
-                onClick={() => applyFormat("code")}
-                class="px-2 py-1 text-sm font-mono hover:bg-gray-200 rounded"
-              >
-                Code
-              </button>
+              <div class="flex items-center space-x-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                <span class="text-gray-700 text-sm font-medium">Format:</span>
+                <button
+                  onClick={() => applyFormat("bold")}
+                  class="px-3 py-1 text-sm font-bold hover:bg-gray-100 rounded border border-gray-200 bg-white transition-colors"
+                  title="Bold (Ctrl+B)"
+                >
+                  B
+                </button>
+                <button
+                  onClick={() => applyFormat("italic")}
+                  class="px-3 py-1 text-sm italic hover:bg-gray-100 rounded border border-gray-200 bg-white transition-colors"
+                  title="Italic (Ctrl+I)"
+                >
+                  I
+                </button>
+                <button
+                  onClick={() => applyFormat("h1")}
+                  class="px-3 py-1 text-sm font-bold hover:bg-gray-100 rounded border border-gray-200 bg-white transition-colors"
+                  title="Heading 1"
+                >
+                  H1
+                </button>
+                <button
+                  onClick={() => applyFormat("h2")}
+                  class="px-3 py-1 text-sm font-semibold hover:bg-gray-100 rounded border border-gray-200 bg-white transition-colors"
+                  title="Heading 2"
+                >
+                  H2
+                </button>
+                <button
+                  onClick={() => applyFormat("bulletList")}
+                  class="px-3 py-1 text-sm hover:bg-gray-100 rounded border border-gray-200 bg-white transition-colors"
+                  title="Bullet List"
+                >
+                  • List
+                </button>
+                <button
+                  onClick={() => applyFormat("orderedList")}
+                  class="px-3 py-1 text-sm hover:bg-gray-100 rounded border border-gray-200 bg-white transition-colors"
+                  title="Numbered List"
+                >
+                  1. List
+                </button>
+                <button
+                  onClick={() => applyFormat("code")}
+                  class="px-3 py-1 text-sm font-mono hover:bg-gray-100 rounded border border-gray-200 bg-white transition-colors"
+                  title="Code"
+                >
+                  &lt;/&gt;
+                </button>
+              </div>
             </Show>
           </div>
+
           {/* Mode Toggle */}
-          <div class="flex items-center">
+          <div class="flex items-center bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
             <button
               onClick={() => setMode("edit")}
-              class={`px-3 py-1 text-sm rounded-l-md ${
-                mode() === "edit" ? "bg-blue-500 text-white" : "bg-gray-200"
+              class={`px-4 py-2 text-sm font-medium transition-colors ${
+                mode() === "edit"
+                  ? "bg-gray-900 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
             >
-              Edit
+              ✏️ Edit
             </button>
             <button
               onClick={() => setMode("preview")}
-              class={`px-3 py-1 text-sm rounded-r-md ${
-                mode() === "preview" ? "bg-blue-500 text-white" : "bg-gray-200"
+              class={`px-4 py-2 text-sm font-medium transition-colors ${
+                mode() === "preview"
+                  ? "bg-gray-900 text-white"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
             >
-              Preview
+              👁️ Preview
             </button>
           </div>
         </div>
 
-        {/* Editor or Preview Pane */}
-        <div class="flex-grow flex flex-col p-4 border border-gray-300 rounded-b-md bg-white overflow-y-auto">
-          <h1 class="text-2xl font-bold mb-4 border-b pb-2 flex-shrink-0">
+        {/* Editor/Preview Area */}
+        <div class="flex-grow flex flex-col p-6 bg-white overflow-y-auto">
+          <h1 class="text-3xl font-bold mb-6 text-gray-900 border-b border-gray-200 pb-3">
             {chapterStore.selectedChapter()?.title || "Loading..."}
           </h1>
+
           <Show
             when={mode() === "edit"}
-            fallback={<div class="prose max-w-none" innerHTML={parsedContent()} />}
+            fallback={
+              <div
+                class="prose prose-lg max-w-none typewriter-text prose-clean"
+                innerHTML={parsedContent()}
+              />
+            }
           >
             <textarea
               ref={textareaRef}
-              class="flex-grow w-full p-2 border-none focus:ring-0 focus:outline-none resize-none"
-              placeholder="Start typing your markdown here..."
+              class="flex-grow w-full p-4 border-none focus:ring-0 focus:outline-none resize-none bg-transparent typewriter-text text-gray-800 text-lg leading-relaxed typewriter-cursor"
+              placeholder="Start writing your story..."
               value={currentContent()}
               onInput={(e) => setCurrentContent(e.currentTarget.value)}
+              style={{
+                "background-image": "linear-gradient(transparent 1.4em, #f3f4f6 1.4em)",
+                "background-size": "100% 1.5em",
+                "line-height": "1.5em",
+              }}
             />
           </Show>
         </div>
-        <div class="mt-auto pt-2 flex justify-end">
+
+        {/* Save Button */}
+        <div class="p-4 bg-gray-50 border-t border-gray-200 flex justify-end">
           <button
             onClick={handleSave}
             disabled={isSaving()}
-            class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
+            class="bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm"
           >
-            {isSaving() ? "Saving..." : "Save Chapter"}
+            {isSaving() ? "💾 Saving..." : "💾 Save Chapter"}
           </button>
         </div>
       </div>

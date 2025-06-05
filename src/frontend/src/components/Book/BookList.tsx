@@ -21,32 +21,50 @@ const BookList: Component = () => {
   };
 
   return (
-    <div class="flex flex-col items-center justify-center h-full bg-gray-100">
-      <div class="p-8 bg-white shadow-lg rounded-lg">
-        <h2 class="text-3xl font-bold mb-6 text-center text-gray-800">Select or Create a Book</h2>
-        <div class="w-full max-w-xs mx-auto">
-          <select
-            class="w-full p-3 border rounded-md mb-4 text-lg"
-            onChange={(e) => bookStore.selectBook(e.currentTarget.value)}
-            value={bookStore.selectedBook() || ""}
-          >
-            <option value="" disabled>
-              Select a book...
-            </option>
-            <For each={bookStore.books()}>{(book) => <option value={book}>{book}</option>}</For>
-          </select>
+    <div class="flex flex-col items-center justify-center h-full bg-gray-50">
+      <div class="p-8 bg-white shadow-lg rounded-lg border border-gray-200 max-w-md w-full mx-4">
+        <div class="text-center mb-6">
+          <div class="text-6xl mb-4">📚</div>
+          <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome to TSWritter</h2>
+          <p class="text-gray-600">Select an existing book or create a new one to begin writing</p>
+        </div>
 
-          <div class="mt-6">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Select a Book</label>
+            <select
+              class="w-full p-3 border border-gray-300 rounded-lg text-gray-900 bg-white focus:border-gray-500 focus:outline-none"
+              onChange={(e) => bookStore.selectBook(e.currentTarget.value)}
+              value={bookStore.selectedBook() || ""}
+            >
+              <option value="" disabled>
+                Choose from your books...
+              </option>
+              <For each={bookStore.books()}>{(book) => <option value={book}>{book}</option>}</For>
+            </select>
+          </div>
+
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300" />
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-white text-gray-500">or</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Create New Book</label>
             <input
               type="text"
-              class="w-full p-3 border rounded-md text-lg"
-              placeholder="Enter new book name"
+              class="w-full p-3 border border-gray-300 rounded-lg text-gray-900 bg-white focus:border-gray-500 focus:outline-none"
+              placeholder="Enter book title..."
               value={newBookName()}
               onInput={(e) => setNewBookName(e.currentTarget.value)}
               onKeyPress={(e) => e.key === "Enter" && handleCreateBook()}
             />
             <button
-              class="w-full bg-blue-600 text-white p-3 rounded-md mt-4 text-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              class="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg mt-3 transition-colors duration-200 shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
               onClick={handleCreateBook}
               disabled={!newBookName().trim()}
             >
@@ -54,7 +72,12 @@ const BookList: Component = () => {
             </button>
           </div>
         </div>
-        {bookStore.loading() && <p class="mt-4 text-center text-gray-500">Loading books...</p>}
+
+        {bookStore.loading() && (
+          <div class="mt-6 text-center">
+            <p class="text-gray-500">Loading books...</p>
+          </div>
+        )}
       </div>
     </div>
   );

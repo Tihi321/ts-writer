@@ -64,7 +64,7 @@ const IdeaItem: Component<{
 
   return (
     <div
-      class="p-3 bg-yellow-100 border border-yellow-200 rounded-md shadow-sm cursor-pointer group relative"
+      class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer group relative hover:shadow-md transition-all duration-200 hover:border-gray-300"
       draggable={!isEditing()}
       onDragStart={(e) => !isEditing() && props.onDragStart(e, props.idea)}
       onDragOver={props.onDragOver}
@@ -72,21 +72,25 @@ const IdeaItem: Component<{
     >
       <div class="flex items-start">
         <Show when={!isEditing()}>
-          <span class="mr-2 text-yellow-600 cursor-grab text-xs">⋮⋮</span>
+          <span class="mr-3 text-gray-400 cursor-grab text-lg hover:text-gray-600 transition-colors">
+            ⋮⋮
+          </span>
         </Show>
 
         <Show
           when={isEditing()}
           fallback={
             <div class="flex-1 flex items-start justify-between">
-              <p class="text-sm text-yellow-800 flex-1">{props.idea.text}</p>
-              <div class="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1 ml-2 flex-shrink-0">
+              <p class="text-sm typewriter-text text-gray-700 flex-1 leading-relaxed">
+                {props.idea.text}
+              </p>
+              <div class="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2 ml-3 flex-shrink-0">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEdit();
                   }}
-                  class="text-blue-500 hover:text-blue-700 text-sm p-1"
+                  class="text-gray-500 hover:text-gray-700 text-lg p-1 hover:bg-gray-100 rounded transition-colors"
                   title="Edit idea"
                 >
                   ✏️
@@ -96,7 +100,7 @@ const IdeaItem: Component<{
                     e.stopPropagation();
                     setShowDeleteConfirm(true);
                   }}
-                  class="text-red-500 hover:text-red-700 text-sm p-1"
+                  class="text-red-500 hover:text-red-700 text-lg p-1 hover:bg-red-50 rounded transition-colors"
                   title="Delete idea"
                 >
                   🗑️
@@ -105,12 +109,12 @@ const IdeaItem: Component<{
             </div>
           }
         >
-          <div class="flex-1 flex flex-col space-y-2">
+          <div class="flex-1 flex flex-col space-y-3">
             <textarea
               value={editText()}
               onInput={(e) => setEditText(e.currentTarget.value)}
               onKeyDown={handleKeyPress}
-              class="flex-1 px-2 py-1 border border-gray-300 rounded text-sm resize-none"
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm typewriter-text resize-none bg-white focus:border-gray-500 focus:outline-none"
               onClick={(e) => e.stopPropagation()}
               rows="3"
               autofocus
@@ -121,7 +125,7 @@ const IdeaItem: Component<{
                   e.stopPropagation();
                   handleSaveEdit();
                 }}
-                class="text-green-600 hover:text-green-800 text-sm px-2 py-1 bg-green-100 rounded"
+                class="text-green-700 hover:text-green-900 text-sm px-3 py-1 bg-green-50 hover:bg-green-100 rounded-md font-medium transition-colors border border-green-200"
                 title="Save"
               >
                 ✓ Save
@@ -131,7 +135,7 @@ const IdeaItem: Component<{
                   e.stopPropagation();
                   handleCancelEdit();
                 }}
-                class="text-gray-500 hover:text-gray-700 text-sm px-2 py-1 bg-gray-100 rounded"
+                class="text-gray-600 hover:text-gray-800 text-sm px-3 py-1 bg-gray-50 hover:bg-gray-100 rounded-md font-medium transition-colors border border-gray-200"
                 title="Cancel"
               >
                 ✕ Cancel
@@ -144,22 +148,22 @@ const IdeaItem: Component<{
       {/* Delete Confirmation Modal */}
       <Show when={showDeleteConfirm()}>
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
-            <h3 class="text-lg font-semibold mb-4">Delete Idea</h3>
+          <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 border border-gray-200">
+            <h3 class="text-lg font-semibold mb-4 text-gray-900">Delete Idea</h3>
             <p class="text-gray-600 mb-4">Are you sure you want to delete this idea?</p>
-            <div class="bg-yellow-50 p-3 rounded mb-4 text-sm text-gray-700 max-h-20 overflow-y-auto">
+            <div class="bg-gray-50 p-3 rounded-md mb-4 text-sm text-gray-700 max-h-20 overflow-y-auto border border-gray-200">
               "{props.idea.text}"
             </div>
             <div class="flex space-x-3">
               <button
                 onClick={handleDelete}
-                class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded"
+                class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
               >
                 Delete
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded"
+                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md transition-colors"
               >
                 Cancel
               </button>
@@ -244,24 +248,38 @@ const IdeasSidebar: Component = () => {
     <Show
       when={chapterStore.selectedChapter()}
       fallback={
-        <div class="p-4 flex items-center justify-center h-full text-gray-500">
-          Select a chapter to see its ideas.
+        <div class="p-6 flex items-center justify-center h-full text-gray-500 bg-gray-50">
+          <div class="text-center">
+            <div class="text-5xl mb-4">💡</div>
+            <p class="font-medium text-lg text-gray-700">Select a chapter to capture ideas</p>
+            <p class="text-sm text-gray-500 mt-2">Your thoughts matter...</p>
+          </div>
         </div>
       }
     >
-      <div class="p-4">
-        <h2 class="text-xl font-semibold mb-3 text-gray-700">
-          Ideas for "{chapterStore.selectedChapter()?.title}"
-        </h2>
+      <div class="p-6 bg-gray-50 h-full">
+        <div class="mb-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-2 flex items-center">
+            <span class="text-2xl mr-2">💡</span>
+            Ideas & Notes
+          </h2>
+          <p class="text-sm text-gray-600">for "{chapterStore.selectedChapter()?.title}"</p>
+        </div>
 
         <Show when={ideaStore.loading()}>
           <p class="text-gray-500">Loading ideas...</p>
         </Show>
 
-        <div class="space-y-2 mb-4">
+        <div class="space-y-3 mb-6">
           <For
             each={ideaStore.ideas()}
-            fallback={<p class="text-sm text-gray-400">No ideas for this chapter yet.</p>}
+            fallback={
+              <div class="text-center p-8 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                <div class="text-3xl mb-2">📝</div>
+                <p class="text-sm text-gray-500">No ideas captured yet</p>
+                <p class="text-xs text-gray-400 mt-1">Start writing your thoughts below</p>
+              </div>
+            }
           >
             {(idea: Idea) => (
               <IdeaItem
@@ -274,18 +292,20 @@ const IdeasSidebar: Component = () => {
           </For>
         </div>
 
-        <textarea
-          class="w-full p-2 border border-gray-300 rounded mb-2 h-24"
-          placeholder="New idea..."
-          value={newIdeaText()}
-          onInput={(e) => setNewIdeaText(e.currentTarget.value)}
-        />
-        <button
-          onClick={handleAddIdea}
-          class="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-semibold py-2 px-4 rounded"
-        >
-          Add Idea
-        </button>
+        <div class="space-y-3">
+          <textarea
+            class="w-full p-4 border border-gray-300 rounded-lg typewriter-text h-24 bg-white focus:border-gray-500 focus:outline-none resize-none"
+            placeholder="Capture a new idea..."
+            value={newIdeaText()}
+            onInput={(e) => setNewIdeaText(e.currentTarget.value)}
+          />
+          <button
+            onClick={handleAddIdea}
+            class="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 shadow-sm"
+          >
+            💡 Add Idea
+          </button>
+        </div>
       </div>
     </Show>
   );
