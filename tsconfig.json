@@ -7,12 +7,19 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
     "baseUrl": ".",
     "paths": {
-      "@backend/*": ["src/backend/*"],
-      "@frontend/*": ["src/frontend/src/*"]
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@stores/*": ["src/stores/*"],
+      "@services/*": ["src/services/*"],
+      "@types/*": ["src/types/*"],
+      "@config/*": ["src/config/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "src/frontend/node_modules"]
+  "exclude": ["node_modules", "dist"]
 }
