@@ -9,13 +9,18 @@ import EditorArea from "@components/Editor/EditorArea";
 import IdeasSidebar from "@components/Ideas/IdeasSidebar";
 import BookList from "@components/Book/BookList";
 import TopToolbar from "@components/Layout/TopToolbar";
+import SettingsModal from "@components/SettingsModal";
 import { bookStore } from "@stores/bookStore";
 import { uiStore } from "@stores/uiStore";
+import { settingsStore } from "@stores/settingsStore";
 
 const App: Component = () => {
   return (
     <DragDropProvider>
       <div class="flex flex-col h-screen bg-gray-50">
+        {/* Settings Modal */}
+        <SettingsModal />
+
         {/* Top Toolbar - Always visible */}
         <TopToolbar />
 

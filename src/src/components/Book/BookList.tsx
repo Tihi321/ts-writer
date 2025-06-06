@@ -27,6 +27,18 @@ const BookList: Component = () => {
           <div class="text-6xl mb-4">📚</div>
           <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome to TSWritter</h2>
           <p class="text-gray-600">Select an existing book or create a new one to begin writing</p>
+          <p class="text-sm text-gray-500 mt-2">
+            Your work is automatically saved locally.
+            <button
+              onClick={() =>
+                import("../../stores/settingsStore").then((m) => m.settingsStore.openSettings())
+              }
+              class="text-blue-600 hover:text-blue-800 underline"
+            >
+              Enable cloud sync
+            </button>
+            to backup to Google Drive.
+          </p>
         </div>
 
         <div class="space-y-4">

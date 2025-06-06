@@ -3,11 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "Web-Based Markdown Editor for Writers",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "start:backend": "cd src/backend && yarn dev",
-    "start:frontend": "cd src/frontend && yarn dev",
-    "dev": "yarn start:backend & yarn start:frontend"
+    "dev": "cd src && yarn dev"
   },
   "keywords": [
     "markdown",
@@ -19,7 +17,6 @@
   "author": "",
   "license": "ISC",
   "workspaces": [
-    "src/frontend",
-    "src/backend"
+    "src"
   ]
 }
