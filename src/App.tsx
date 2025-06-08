@@ -1,5 +1,5 @@
 import type { Component } from "solid-js";
-import { Show } from "solid-js";
+import { Show, onMount } from "solid-js";
 import { DragDropProvider } from "@thisbeyond/solid-dnd";
 
 // Using path aliases defined in tsconfig.json
@@ -10,11 +10,27 @@ import IdeasSidebar from "@components/Ideas/IdeasSidebar";
 import BookList from "@components/Book/BookList";
 import TopToolbar from "@components/Layout/TopToolbar";
 import SettingsModal from "@components/SettingsModal";
+import CreateBookModal from "@components/Book/CreateBookModal";
+import LoadBookModal from "@components/Book/LoadBookModal";
 import { bookStore } from "@stores/bookStore";
 import { uiStore } from "@stores/uiStore";
 import { settingsStore } from "@stores/settingsStore";
+import { dataService } from "@services/dataService";
 
 const App: Component = () => {
+  // Initialize services on app startup
+  onMount(async () => {
+    try {
+      // Initialize settings first
+      settingsStore.initialize();
+
+      // Initialize data service (which will restore auth state if available)
+      await dataService.initialize();
+    } catch (error) {
+      console.error("Failed to initialize app:", error);
+    }
+  });
+
   return (
     <DragDropProvider>
       <div class="flex flex-col h-screen bg-gray-50">

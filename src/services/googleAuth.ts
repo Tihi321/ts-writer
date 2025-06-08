@@ -1,5 +1,4 @@
-import { gapi } from "gapi-script";
-import { createSignal, createEffect } from "solid-js";
+import { createSignal } from "solid-js";
 import { GOOGLE_CONFIG } from "../config/google";
 import { indexedDBService } from "./indexedDB";
 
@@ -10,11 +9,36 @@ export interface GoogleUser {
   picture: string;
 }
 
+// Declare global types for Google Identity Services only
+declare global {
+  interface Window {
+    google: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          prompt: () => void;
+          renderButton: (element: HTMLElement, config: any) => void;
+          disableAutoSelect: () => void;
+          revoke: (email: string, callback: () => void) => void;
+        };
+        oauth2: {
+          initTokenClient: (config: any) => any;
+          hasGrantedAllScopes: (token: any, ...scopes: string[]) => boolean;
+        };
+      };
+    };
+  }
+}
+
 class GoogleAuthService {
   private isInitialized = false;
   private isSignedInSignal = createSignal(false);
   private userSignal = createSignal<GoogleUser | null>(null);
   private isLoadingSignal = createSignal(true);
+  private tokenClient: any = null;
+  private accessToken: string | null = null;
+  private refreshToken: string | null = null;
+  private tokenExpiresAt: number | null = null;
 
   // Public getters for reactive state
   get signedIn() {
@@ -48,64 +72,30 @@ class GoogleAuthService {
 
       // Get API keys from database
       const clientId = await indexedDBService.getGoogleClientId();
-      const apiKey = await indexedDBService.getGoogleApiKey();
 
       if (!clientId) {
         throw new Error("Google Client ID not configured. Please set it in Settings.");
       }
 
-      // Load the Google API
-      await new Promise<void>((resolve, reject) => {
-        gapi.load("auth2", {
-          callback: resolve,
-          onerror: reject,
-        });
-      });
+      // Check for stored authentication state
+      await this.restoreAuthState();
 
-      // Load the client library
-      await new Promise<void>((resolve, reject) => {
-        gapi.load("client", {
-          callback: resolve,
-          onerror: reject,
-        });
-      });
+      // Load Google Identity Services
+      await this.loadGoogleIdentityServices();
 
-      // Initialize the client with API key if available
-      const initConfig: any = {
-        discoveryDocs: GOOGLE_CONFIG.DISCOVERY_DOCS,
-      };
-
-      if (apiKey) {
-        initConfig.apiKey = apiKey;
-      }
-
-      await (gapi.client as any).init(initConfig);
-
-      // Initialize the auth2 library
-      await gapi.auth2.init({
+      // Initialize the OAuth2 token client with popup mode
+      this.tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: clientId,
         scope: GOOGLE_CONFIG.SCOPES,
+        ux_mode: "popup",
+        callback: (response: any) => {
+          if (response.error) {
+            console.error("Token client error:", response.error);
+            return;
+          }
+          this.handleTokenResponse(response);
+        },
       });
-
-      const authInstance = gapi.auth2.getAuthInstance();
-
-      // Set up auth state listeners
-      authInstance.isSignedIn.listen((isSignedIn: boolean) => {
-        this.setIsSignedIn(isSignedIn);
-        if (isSignedIn) {
-          this.updateUserInfo();
-        } else {
-          this.setUser(null);
-        }
-      });
-
-      // Check current auth state
-      const currentlySignedIn = authInstance.isSignedIn.get();
-      this.setIsSignedIn(currentlySignedIn);
-
-      if (currentlySignedIn) {
-        this.updateUserInfo();
-      }
 
       this.isInitialized = true;
     } catch (error) {
@@ -116,17 +106,123 @@ class GoogleAuthService {
     }
   }
 
-  private updateUserInfo(): void {
-    const authInstance = gapi.auth2.getAuthInstance();
-    const googleUser = authInstance.currentUser.get();
-    const profile = googleUser.getBasicProfile();
+  private async loadGoogleIdentityServices(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (window.google?.accounts) {
+        resolve();
+        return;
+      }
 
-    this.setUser({
-      id: profile.getId(),
-      name: profile.getName(),
-      email: profile.getEmail(),
-      picture: profile.getImageUrl(),
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Failed to load Google Identity Services"));
+      document.head.appendChild(script);
     });
+  }
+
+  private handleTokenResponse(response: any): void {
+    this.accessToken = response.access_token;
+
+    // Calculate token expiration (Google tokens typically expire in 1 hour)
+    const expiresIn = response.expires_in || 3600; // Default to 1 hour
+    this.tokenExpiresAt = Date.now() + expiresIn * 1000;
+
+    this.setIsSignedIn(true);
+    this.fetchUserInfo();
+    this.saveAuthState();
+  }
+
+  private async saveAuthState(): Promise<void> {
+    if (this.accessToken && this.currentUser) {
+      try {
+        const authState = {
+          accessToken: this.accessToken,
+          refreshToken: this.refreshToken,
+          tokenExpiresAt: this.tokenExpiresAt,
+          user: this.currentUser,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem("tswriter_auth_state", JSON.stringify(authState));
+      } catch (error) {
+        console.error("Failed to save auth state:", error);
+      }
+    }
+  }
+
+  private async restoreAuthState(): Promise<void> {
+    try {
+      const storedState = localStorage.getItem("tswriter_auth_state");
+      if (!storedState) {
+        return;
+      }
+
+      const authState = JSON.parse(storedState);
+
+      // Check if the stored state is not too old (7 days max)
+      const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+      if (Date.now() - authState.timestamp > maxAge) {
+        localStorage.removeItem("tswriter_auth_state");
+        return;
+      }
+
+      // Check if token is expired
+      if (authState.tokenExpiresAt && Date.now() > authState.tokenExpiresAt) {
+        localStorage.removeItem("tswriter_auth_state");
+        return;
+      }
+
+      // Verify the token is still valid by making a test request
+      const response = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: {
+          Authorization: `Bearer ${authState.accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        this.accessToken = authState.accessToken;
+        this.refreshToken = authState.refreshToken;
+        this.tokenExpiresAt = authState.tokenExpiresAt;
+        this.setUser(authState.user);
+        this.setIsSignedIn(true);
+      } else {
+        localStorage.removeItem("tswriter_auth_state");
+      }
+    } catch (error) {
+      console.error("Failed to restore auth state:", error);
+      localStorage.removeItem("tswriter_auth_state");
+    }
+  }
+
+  private async fetchUserInfo(): Promise<void> {
+    if (!this.accessToken) return;
+
+    try {
+      const response = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user info");
+      }
+
+      const userInfo = await response.json();
+      this.setUser({
+        id: userInfo.id,
+        name: userInfo.name,
+        email: userInfo.email,
+        picture: userInfo.picture,
+      });
+
+      // Save auth state after successful user info fetch
+      this.saveAuthState();
+    } catch (error) {
+      console.error("Failed to fetch user info:", error);
+      this.setUser(null);
+      this.setIsSignedIn(false);
+    }
   }
 
   async signIn(): Promise<void> {
@@ -135,8 +231,14 @@ class GoogleAuthService {
     }
 
     try {
-      const authInstance = gapi.auth2.getAuthInstance();
-      await authInstance.signIn();
+      if (!this.tokenClient) {
+        throw new Error("Token client not initialized");
+      }
+
+      // Request access token in popup mode
+      this.tokenClient.requestAccessToken({
+        prompt: "consent",
+      });
     } catch (error) {
       console.error("Sign in failed:", error);
       throw new Error("Failed to sign in to Google");
@@ -144,11 +246,23 @@ class GoogleAuthService {
   }
 
   async signOut(): Promise<void> {
-    if (!this.isInitialized) return;
+    if (!this.isInitialized || !this.accessToken) return;
 
     try {
-      const authInstance = gapi.auth2.getAuthInstance();
-      await authInstance.signOut();
+      // Revoke the access token
+      await fetch(`https://oauth2.googleapis.com/revoke?token=${this.accessToken}`, {
+        method: "POST",
+        headers: {
+          "Content-type": "application/x-www-form-urlencoded",
+        },
+      });
+
+      this.accessToken = null;
+      this.setIsSignedIn(false);
+      this.setUser(null);
+
+      // Clear stored auth state
+      localStorage.removeItem("tswriter_auth_state");
     } catch (error) {
       console.error("Sign out failed:", error);
       throw new Error("Failed to sign out");
@@ -156,33 +270,23 @@ class GoogleAuthService {
   }
 
   getAccessToken(): string | null {
-    if (!this.isInitialized || !this.signedIn) return null;
-
-    const authInstance = gapi.auth2.getAuthInstance();
-    const user = authInstance.currentUser.get();
-    return user.getAuthResponse().access_token;
+    return this.accessToken;
   }
 
   async ensureValidToken(): Promise<string> {
-    if (!this.isInitialized || !this.signedIn) {
+    if (!this.isInitialized || !this.signedIn || !this.accessToken) {
       throw new Error("User not signed in");
     }
 
-    const authInstance = gapi.auth2.getAuthInstance();
-    const user = authInstance.currentUser.get();
-    const authResponse = user.getAuthResponse();
-
-    // Check if token is expired (with 5 minute buffer)
-    const now = Date.now();
-    const expiresAt = authResponse.expires_at;
-
-    if (expiresAt - now < 5 * 60 * 1000) {
-      // 5 minutes
-      // Token is expired or about to expire, refresh it
-      await user.reloadAuthResponse();
+    // Check if token is expired or will expire soon (within 5 minutes)
+    const fiveMinutes = 5 * 60 * 1000;
+    if (this.tokenExpiresAt && Date.now() > this.tokenExpiresAt - fiveMinutes) {
+      // Clear the expired token and force re-authentication
+      await this.signOut();
+      throw new Error("Token expired, please sign in again");
     }
 
-    return user.getAuthResponse().access_token;
+    return this.accessToken;
   }
 }
 

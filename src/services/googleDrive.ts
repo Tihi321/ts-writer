@@ -1,4 +1,3 @@
-import { gapi } from "gapi-script";
 import { googleAuth } from "./googleAuth";
 import { GOOGLE_CONFIG } from "../config/google";
 
@@ -27,25 +26,74 @@ class GoogleDriveService {
     await this.ensureAppFolder();
   }
 
+  private async makeApiRequest(
+    path: string,
+    method: string = "GET",
+    body?: any,
+    params?: Record<string, string>,
+    isMultipart: boolean = false
+  ): Promise<any> {
+    const token = await googleAuth.ensureValidToken();
+
+    let url = path;
+    if (params) {
+      const searchParams = new URLSearchParams(params);
+      url += `?${searchParams.toString()}`;
+    }
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+    };
+
+    const requestInit: RequestInit = {
+      method,
+      headers,
+    };
+
+    if (body) {
+      if (typeof body === "string") {
+        requestInit.body = body;
+        if (isMultipart) {
+          // For multipart uploads, set the correct Content-Type with boundary
+          headers["Content-Type"] = "multipart/related; boundary=-------314159265358979323846";
+        }
+      } else {
+        headers["Content-Type"] = "application/json";
+        requestInit.body = JSON.stringify(body);
+      }
+    }
+
+    const response = await fetch(url, requestInit);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API request failed: ${response.status} ${response.statusText}`, errorText);
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      return await response.json();
+    } else {
+      return await response.text();
+    }
+  }
+
   private async ensureAppFolder(): Promise<string> {
     if (this.appFolderId) return this.appFolderId;
 
-    const token = await googleAuth.ensureValidToken();
-
     // Search for existing app folder
-    const searchResponse = await gapi.client.request({
-      path: "https://www.googleapis.com/drive/v3/files",
-      method: "GET",
-      params: {
+    const searchResponse = await this.makeApiRequest(
+      "https://www.googleapis.com/drive/v3/files",
+      "GET",
+      undefined,
+      {
         q: `name='${GOOGLE_CONFIG.APP_FOLDER_NAME}' and mimeType='${MIME_TYPES.FOLDER}' and trashed=false`,
         fields: "files(id, name)",
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      }
+    );
 
-    const folders = searchResponse.result.files;
+    const folders = searchResponse.files;
 
     if (folders && folders.length > 0) {
       this.appFolderId = folders[0].id;
@@ -53,25 +101,20 @@ class GoogleDriveService {
     }
 
     // Create app folder if it doesn't exist
-    const createResponse = await gapi.client.request({
-      path: "https://www.googleapis.com/drive/v3/files",
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const createResponse = await this.makeApiRequest(
+      "https://www.googleapis.com/drive/v3/files",
+      "POST",
+      {
         name: GOOGLE_CONFIG.APP_FOLDER_NAME,
         mimeType: MIME_TYPES.FOLDER,
-      }),
-    });
+      }
+    );
 
-    this.appFolderId = createResponse.result.id;
+    this.appFolderId = createResponse.id;
     return this.appFolderId!;
   }
 
   async createBookFolder(bookName: string): Promise<string> {
-    const token = await googleAuth.ensureValidToken();
     const appFolderId = await this.ensureAppFolder();
 
     // Check if book folder already exists
@@ -81,26 +124,20 @@ class GoogleDriveService {
     }
 
     // Create book folder
-    const response = await gapi.client.request({
-      path: "https://www.googleapis.com/drive/v3/files",
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const response = await this.makeApiRequest(
+      "https://www.googleapis.com/drive/v3/files",
+      "POST",
+      {
         name: bookName,
         mimeType: MIME_TYPES.FOLDER,
         parents: [appFolderId],
-      }),
-    });
+      }
+    );
 
-    return response.result.id;
+    return response.id;
   }
 
   async createChaptersFolder(bookFolderId: string): Promise<string> {
-    const token = await googleAuth.ensureValidToken();
-
     // Check if chapters folder already exists
     const existingFolder = await this.findFileInFolder(bookFolderId, "chapters", MIME_TYPES.FOLDER);
     if (existingFolder) {
@@ -108,21 +145,17 @@ class GoogleDriveService {
     }
 
     // Create chapters folder
-    const response = await gapi.client.request({
-      path: "https://www.googleapis.com/drive/v3/files",
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const response = await this.makeApiRequest(
+      "https://www.googleapis.com/drive/v3/files",
+      "POST",
+      {
         name: "chapters",
         mimeType: MIME_TYPES.FOLDER,
         parents: [bookFolderId],
-      }),
-    });
+      }
+    );
 
-    return response.result.id;
+    return response.id;
   }
 
   private async findFileInFolder(
@@ -130,89 +163,79 @@ class GoogleDriveService {
     fileName: string,
     mimeType?: string
   ): Promise<DriveFile | null> {
-    const token = await googleAuth.ensureValidToken();
-
     let query = `name='${fileName}' and '${folderId}' in parents and trashed=false`;
     if (mimeType) {
       query += ` and mimeType='${mimeType}'`;
     }
 
-    const response = await gapi.client.request({
-      path: "https://www.googleapis.com/drive/v3/files",
-      method: "GET",
-      params: {
+    const response = await this.makeApiRequest(
+      "https://www.googleapis.com/drive/v3/files",
+      "GET",
+      undefined,
+      {
         q: query,
         fields: "files(id, name, mimeType, modifiedTime, parents)",
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      }
+    );
 
-    const files = response.result.files;
+    const files = response.files;
     return files && files.length > 0 ? files[0] : null;
   }
 
   async listBooks(): Promise<string[]> {
     const appFolderId = await this.ensureAppFolder();
-    const token = await googleAuth.ensureValidToken();
 
-    const response = await gapi.client.request({
-      path: "https://www.googleapis.com/drive/v3/files",
-      method: "GET",
-      params: {
+    const response = await this.makeApiRequest(
+      "https://www.googleapis.com/drive/v3/files",
+      "GET",
+      undefined,
+      {
         q: `'${appFolderId}' in parents and mimeType='${MIME_TYPES.FOLDER}' and trashed=false`,
         fields: "files(name)",
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      }
+    );
 
-    const folders = response.result.files || [];
+    const folders = response.files || [];
     return folders.map((folder: any) => folder.name);
   }
 
   async saveBookConfig(bookName: string, config: any): Promise<void> {
     const bookFolderId = await this.createBookFolder(bookName);
-    const token = await googleAuth.ensureValidToken();
 
     // Check if book.json already exists
     const existingFile = await this.findFileInFolder(bookFolderId, "book.json", MIME_TYPES.JSON);
 
     const content = JSON.stringify(config, null, 2);
-    const metadata = {
-      name: "book.json",
-      parents: [bookFolderId],
-      mimeType: MIME_TYPES.JSON,
-    };
 
     if (existingFile) {
-      // Update existing file
-      await gapi.client.request({
-        path: `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}`,
-        method: "PATCH",
-        params: {
-          uploadType: "multipart",
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: this.createMultipartBody(metadata, content),
-      });
+      // Update existing file - don't include parents field for updates
+      const updateMetadata = {
+        name: "book.json",
+        mimeType: MIME_TYPES.JSON,
+      };
+
+      await this.makeApiRequest(
+        `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=multipart`,
+        "PATCH",
+        this.createMultipartBody(updateMetadata, content),
+        undefined,
+        true
+      );
     } else {
-      // Create new file
-      await gapi.client.request({
-        path: "https://www.googleapis.com/upload/drive/v3/files",
-        method: "POST",
-        params: {
-          uploadType: "multipart",
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: this.createMultipartBody(metadata, content),
-      });
+      // Create new file - include parents field for creation
+      const createMetadata = {
+        name: "book.json",
+        parents: [bookFolderId],
+        mimeType: MIME_TYPES.JSON,
+      };
+
+      await this.makeApiRequest(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        "POST",
+        this.createMultipartBody(createMetadata, content),
+        undefined,
+        true
+      );
     }
   }
 
@@ -222,25 +245,17 @@ class GoogleDriveService {
 
     if (!configFile) return null;
 
-    const token = await googleAuth.ensureValidToken();
-    const response = await gapi.client.request({
-      path: `https://www.googleapis.com/drive/v3/files/${configFile.id}`,
-      method: "GET",
-      params: {
-        alt: "media",
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await this.makeApiRequest(
+      `https://www.googleapis.com/drive/v3/files/${configFile.id}?alt=media`,
+      "GET"
+    );
 
-    return JSON.parse(response.body);
+    return JSON.parse(response);
   }
 
   async saveChapterContent(bookName: string, fileName: string, content: string): Promise<void> {
     const bookFolderId = await this.createBookFolder(bookName);
     const chaptersFolderId = await this.createChaptersFolder(bookFolderId);
-    const token = await googleAuth.ensureValidToken();
 
     // Check if chapter file already exists
     const existingFile = await this.findFileInFolder(
@@ -249,38 +264,35 @@ class GoogleDriveService {
       MIME_TYPES.MARKDOWN
     );
 
-    const metadata = {
-      name: fileName,
-      parents: [chaptersFolderId],
-      mimeType: MIME_TYPES.MARKDOWN,
-    };
-
     if (existingFile) {
-      // Update existing file
-      await gapi.client.request({
-        path: `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}`,
-        method: "PATCH",
-        params: {
-          uploadType: "multipart",
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: this.createMultipartBody(metadata, content),
-      });
+      // Update existing file - don't include parents field for updates
+      const updateMetadata = {
+        name: fileName,
+        mimeType: MIME_TYPES.MARKDOWN,
+      };
+
+      await this.makeApiRequest(
+        `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=multipart`,
+        "PATCH",
+        this.createMultipartBody(updateMetadata, content),
+        undefined,
+        true
+      );
     } else {
-      // Create new file
-      await gapi.client.request({
-        path: "https://www.googleapis.com/upload/drive/v3/files",
-        method: "POST",
-        params: {
-          uploadType: "multipart",
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: this.createMultipartBody(metadata, content),
-      });
+      // Create new file - include parents field for creation
+      const createMetadata = {
+        name: fileName,
+        parents: [chaptersFolderId],
+        mimeType: MIME_TYPES.MARKDOWN,
+      };
+
+      await this.makeApiRequest(
+        "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        "POST",
+        this.createMultipartBody(createMetadata, content),
+        undefined,
+        true
+      );
     }
   }
 
@@ -295,19 +307,12 @@ class GoogleDriveService {
 
     if (!chapterFile) return null;
 
-    const token = await googleAuth.ensureValidToken();
-    const response = await gapi.client.request({
-      path: `https://www.googleapis.com/drive/v3/files/${chapterFile.id}`,
-      method: "GET",
-      params: {
-        alt: "media",
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await this.makeApiRequest(
+      `https://www.googleapis.com/drive/v3/files/${chapterFile.id}?alt=media`,
+      "GET"
+    );
 
-    return response.body;
+    return response;
   }
 
   async deleteChapterFile(bookName: string, fileName: string): Promise<void> {
@@ -321,34 +326,27 @@ class GoogleDriveService {
 
     if (!chapterFile) return;
 
-    const token = await googleAuth.ensureValidToken();
-    await gapi.client.request({
-      path: `https://www.googleapis.com/drive/v3/files/${chapterFile.id}`,
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    await this.makeApiRequest(
+      `https://www.googleapis.com/drive/v3/files/${chapterFile.id}`,
+      "DELETE"
+    );
   }
 
   async listChapterFiles(bookName: string): Promise<string[]> {
     const bookFolderId = await this.createBookFolder(bookName);
     const chaptersFolderId = await this.createChaptersFolder(bookFolderId);
-    const token = await googleAuth.ensureValidToken();
 
-    const response = await gapi.client.request({
-      path: "https://www.googleapis.com/drive/v3/files",
-      method: "GET",
-      params: {
+    const response = await this.makeApiRequest(
+      "https://www.googleapis.com/drive/v3/files",
+      "GET",
+      undefined,
+      {
         q: `'${chaptersFolderId}' in parents and mimeType='${MIME_TYPES.MARKDOWN}' and trashed=false`,
         fields: "files(name)",
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      }
+    );
 
-    const files = response.result.files || [];
+    const files = response.files || [];
     return files.map((file: any) => file.name);
   }
 
@@ -373,14 +371,10 @@ class GoogleDriveService {
 
     if (!bookFolder) return;
 
-    const token = await googleAuth.ensureValidToken();
-    await gapi.client.request({
-      path: `https://www.googleapis.com/drive/v3/files/${bookFolder.id}`,
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    await this.makeApiRequest(
+      `https://www.googleapis.com/drive/v3/files/${bookFolder.id}`,
+      "DELETE"
+    );
   }
 }
 

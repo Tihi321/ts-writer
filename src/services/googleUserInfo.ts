@@ -1,4 +1,3 @@
-import { gapi } from "gapi-script";
 import { googleAuth } from "./googleAuth";
 
 export interface ExtendedGoogleUser {
@@ -30,6 +29,28 @@ export interface ExtendedGoogleUser {
 }
 
 class GoogleUserInfoService {
+  private async makeApiRequest(url: string, params?: Record<string, string>): Promise<any> {
+    const token = await googleAuth.ensureValidToken();
+
+    let fullUrl = url;
+    if (params) {
+      const searchParams = new URLSearchParams(params);
+      fullUrl += `?${searchParams.toString()}`;
+    }
+
+    const response = await fetch(fullUrl, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
   /**
    * Get extended user profile information
    * Requires additional scopes: 'profile', 'email'
@@ -40,18 +61,8 @@ class GoogleUserInfoService {
     }
 
     try {
-      const token = await googleAuth.ensureValidToken();
-
       // Get detailed profile information
-      const response = await gapi.client.request({
-        path: "https://www.googleapis.com/oauth2/v2/userinfo",
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const profile = response.result;
+      const profile = await this.makeApiRequest("https://www.googleapis.com/oauth2/v2/userinfo");
 
       return {
         id: profile.id,
@@ -78,20 +89,11 @@ class GoogleUserInfoService {
     }
 
     try {
-      const token = await googleAuth.ensureValidToken();
-
-      const response = await gapi.client.request({
-        path: "https://www.googleapis.com/drive/v3/about",
-        method: "GET",
-        params: {
-          fields: "storageQuota,user",
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await this.makeApiRequest("https://www.googleapis.com/drive/v3/about", {
+        fields: "storageQuota,user",
       });
 
-      return response.result;
+      return response;
     } catch (error) {
       console.error("Failed to get drive storage info:", error);
       throw error;
@@ -108,22 +110,13 @@ class GoogleUserInfoService {
     }
 
     try {
-      const token = await googleAuth.ensureValidToken();
-
-      const response = await gapi.client.request({
-        path: "https://www.googleapis.com/drive/v3/files",
-        method: "GET",
-        params: {
-          orderBy: "modifiedTime desc",
-          pageSize: 10,
-          fields: "files(id,name,modifiedTime,mimeType,size)",
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await this.makeApiRequest("https://www.googleapis.com/drive/v3/files", {
+        orderBy: "modifiedTime desc",
+        pageSize: "10",
+        fields: "files(id,name,modifiedTime,mimeType,size)",
       });
 
-      return response.result.files || [];
+      return response.files || [];
     } catch (error) {
       console.error("Failed to get recent drive activity:", error);
       throw error;
@@ -140,26 +133,17 @@ class GoogleUserInfoService {
     }
 
     try {
-      const token = await googleAuth.ensureValidToken();
-
-      // Load Calendar API if not already loaded
-      await gapi.client.load("calendar", "v3");
-
-      const response = await gapi.client.request({
-        path: "https://www.googleapis.com/calendar/v3/calendars/primary/events",
-        method: "GET",
-        params: {
+      const response = await this.makeApiRequest(
+        "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+        {
           timeMin: new Date().toISOString(),
-          maxResults: 10,
-          singleEvents: true,
+          maxResults: "10",
+          singleEvents: "true",
           orderBy: "startTime",
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        }
+      );
 
-      return response.result.items || [];
+      return response.items || [];
     } catch (error) {
       console.error("Failed to get calendar events:", error);
       throw error;
@@ -176,17 +160,11 @@ class GoogleUserInfoService {
     }
 
     try {
-      const token = await googleAuth.ensureValidToken();
+      const response = await this.makeApiRequest(
+        "https://www.googleapis.com/gmail/v1/users/me/labels"
+      );
 
-      const response = await gapi.client.request({
-        path: "https://www.googleapis.com/gmail/v1/users/me/labels",
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      return response.result.labels || [];
+      return response.labels || [];
     } catch (error) {
       console.error("Failed to get Gmail labels:", error);
       throw error;
@@ -203,17 +181,9 @@ class GoogleUserInfoService {
     }
 
     try {
-      const token = await googleAuth.ensureValidToken();
+      const response = await this.makeApiRequest("https://photoslibrary.googleapis.com/v1/albums");
 
-      const response = await gapi.client.request({
-        path: "https://photoslibrary.googleapis.com/v1/albums",
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      return response.result.albums || [];
+      return response.albums || [];
     } catch (error) {
       console.error("Failed to get Photos albums:", error);
       throw error;

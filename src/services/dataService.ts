@@ -15,14 +15,30 @@ class DataService {
     // Always initialize IndexedDB first (works offline)
     await indexedDBService.initialize();
 
-    // Only initialize Google services if sync is enabled and user is signed in
-    if (settingsStore.settings.googleSyncEnabled && googleAuth.signedIn) {
+    // Try to initialize Google Auth if sync is enabled or auto sign-in is enabled
+    if (settingsStore.settings.googleSyncEnabled || settingsStore.settings.autoSignIn) {
       try {
-        await googleDriveService.initialize();
-        // Perform initial sync
-        await this.syncFromCloud();
+        await googleAuth.initialize();
+
+        // If auto sign-in is enabled and user is not signed in, try to sign in
+        if (settingsStore.settings.autoSignIn && !googleAuth.signedIn) {
+          try {
+            await googleAuth.signIn();
+          } catch (error) {
+            // Auto sign-in failed silently
+          }
+        }
+
+        // If user is signed in after initialization, set up Google Drive
+        if (googleAuth.signedIn) {
+          await googleDriveService.initialize();
+          // Perform initial sync if auto-sync is enabled
+          if (settingsStore.settings.autoSyncEnabled) {
+            await this.syncFromCloud();
+          }
+        }
       } catch (error) {
-        console.warn("Failed to initialize Google Drive, working offline:", error);
+        // Failed to initialize Google services, working offline
       }
     }
 
@@ -54,8 +70,12 @@ class DataService {
     await this.initialize();
     await indexedDBService.saveBookConfig(bookName, config);
 
-    // Sync to cloud if sync is enabled and online
-    if (settingsStore.settings.googleSyncEnabled && googleAuth.signedIn) {
+    // Sync to cloud if sync is enabled, auto-sync is enabled, and online
+    if (
+      settingsStore.settings.googleSyncEnabled &&
+      settingsStore.settings.autoSyncEnabled &&
+      googleAuth.signedIn
+    ) {
       this.syncToCloud().catch(console.error);
     }
   }
@@ -80,8 +100,12 @@ class DataService {
     await this.initialize();
     await indexedDBService.saveChapterContent(bookName, fileName, content);
 
-    // Sync to cloud if sync is enabled and online
-    if (settingsStore.settings.googleSyncEnabled && googleAuth.signedIn) {
+    // Sync to cloud if sync is enabled, auto-sync is enabled, and online
+    if (
+      settingsStore.settings.googleSyncEnabled &&
+      settingsStore.settings.autoSyncEnabled &&
+      googleAuth.signedIn
+    ) {
       this.syncToCloud().catch(console.error);
     }
   }
@@ -106,8 +130,14 @@ class DataService {
     if (!settingsStore.settings.googleSyncEnabled || !googleAuth.signedIn || this.syncInProgress)
       return;
 
+    // Set a timeout to prevent sync from getting stuck
+    const timeoutId = setTimeout(() => {
+      this.syncInProgress = false;
+    }, 30000); // 30 second timeout
+
     try {
       this.syncInProgress = true;
+
       const pendingChanges = await indexedDBService.getPendingChanges();
 
       // Sync pending books
@@ -131,6 +161,7 @@ class DataService {
       console.error("Failed to sync to cloud:", error);
       throw error;
     } finally {
+      clearTimeout(timeoutId);
       this.syncInProgress = false;
     }
   }
@@ -194,6 +225,7 @@ class DataService {
 
       return hasPendingChanges ? "pending" : "synced";
     } catch (error) {
+      console.error("Error getting sync status:", error);
       return "error";
     }
   }
@@ -206,40 +238,14 @@ class DataService {
     await this.syncToCloud();
   }
 
-  // Utility methods for migration from backend
-  async migrateFromBackend(backendData: {
-    books: string[];
-    bookConfigs: Record<string, BookConfig>;
-    chapterContents: Record<string, Record<string, string>>;
-  }): Promise<void> {
-    await this.initialize();
+  // Reset sync state in case it gets stuck
+  resetSyncState(): void {
+    this.syncInProgress = false;
+  }
 
-    // Clear existing data
-    await indexedDBService.clearAllData();
-
-    // Import books
-    for (const bookName of backendData.books) {
-      await indexedDBService.createBook(bookName);
-
-      // Import book config
-      const config = backendData.bookConfigs[bookName];
-      if (config) {
-        await indexedDBService.saveBookConfig(bookName, config);
-      }
-
-      // Import chapter contents
-      const chapters = backendData.chapterContents[bookName];
-      if (chapters) {
-        for (const [fileName, content] of Object.entries(chapters)) {
-          await indexedDBService.saveChapterContent(bookName, fileName, content);
-        }
-      }
-    }
-
-    // Sync to cloud if signed in
-    if (googleAuth.signedIn) {
-      await this.syncToCloud();
-    }
+  // Check if sync is currently in progress
+  isSyncInProgress(): boolean {
+    return this.syncInProgress;
   }
 
   // Event handling for real-time sync (replaces WebSocket)

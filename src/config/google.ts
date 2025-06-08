@@ -6,8 +6,9 @@ export const GOOGLE_CONFIG = {
   // App folder name in Google Drive
   APP_FOLDER_NAME: "TSWriter",
 
-  // Current scopes - minimal for basic functionality
-  SCOPES: "https://www.googleapis.com/auth/drive.file",
+  // Current scopes - includes user info for modern auth
+  SCOPES:
+    "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
 
   // Enhanced scopes for more user information
   // Uncomment and use these for additional features:

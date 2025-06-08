@@ -2,6 +2,8 @@ import { createSignal } from "solid-js";
 
 export interface AppSettings {
   googleSyncEnabled: boolean;
+  autoSignIn: boolean; // New setting for automatic sign-in
+  autoSyncEnabled: boolean; // Setting for automatic sync
   autoSyncInterval: number; // minutes
   offlineMode: boolean;
   theme: "light" | "dark" | "auto";
@@ -11,6 +13,8 @@ export interface AppSettings {
 
 const DEFAULT_SETTINGS: AppSettings = {
   googleSyncEnabled: false,
+  autoSignIn: true, // Enabled by default
+  autoSyncEnabled: false, // Disabled by default
   autoSyncInterval: 5,
   offlineMode: false,
   theme: "light",
