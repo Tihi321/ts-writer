@@ -525,39 +525,6 @@ const SettingsModal: Component = () => {
             {/* General Tab */}
             <Show when={activeTab() === "general"}>
               <div class="space-y-8">
-                {/* Theme Section */}
-                <div class="space-y-4">
-                  <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                    Theme
-                  </h3>
-
-                  <label class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">Appearance</span>
-                    <select
-                      value={settingsStore.settings.theme}
-                      onChange={(e) =>
-                        settingsStore.updateSetting(
-                          "theme",
-                          e.currentTarget.value as "light" | "dark" | "auto"
-                        )
-                      }
-                      class="text-sm border border-gray-300 px-2 py-1"
-                    >
-                      <option value="light">Light</option>
-                      <option value="dark">Dark</option>
-                      <option value="auto">Auto</option>
-                    </select>
-                  </label>
-                </div>
-
                 {/* Data Management */}
                 <div class="space-y-4 border-t border-gray-200 pt-6">
                   <h3 class="text-lg font-semibold text-gray-900">Data Management</h3>

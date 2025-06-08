@@ -6,7 +6,6 @@ export interface AppSettings {
   autoSyncEnabled: boolean; // Setting for automatic sync
   autoSyncInterval: number; // minutes
   offlineMode: boolean;
-  theme: "light" | "dark" | "auto";
   autoSave: boolean;
   autoSaveInterval: number; // seconds
 }
@@ -17,7 +16,6 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoSyncEnabled: false, // Disabled by default
   autoSyncInterval: 5,
   offlineMode: false,
-  theme: "light",
   autoSave: true,
   autoSaveInterval: 30,
 };
