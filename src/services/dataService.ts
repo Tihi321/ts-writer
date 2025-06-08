@@ -3,7 +3,7 @@ import { googleDriveService } from "./googleDrive";
 import { googleAuth } from "./googleAuth";
 import { settingsStore } from "../stores/settingsStore";
 
-export type SyncStatus = "synced" | "pending" | "offline" | "error";
+export type SyncStatus = "synced" | "pending" | "manual" | "offline" | "error";
 
 class DataService {
   private isInitialized = false;
@@ -222,6 +222,12 @@ class DataService {
       const pendingChanges = await indexedDBService.getPendingChanges();
       const hasPendingChanges =
         pendingChanges.books.length > 0 || pendingChanges.chapters.length > 0;
+
+      // If there are pending changes but auto-sync is disabled, show as manual
+      // to indicate that manual sync is needed
+      if (hasPendingChanges && !settingsStore.settings.autoSyncEnabled) {
+        return "manual";
+      }
 
       return hasPendingChanges ? "pending" : "synced";
     } catch (error) {

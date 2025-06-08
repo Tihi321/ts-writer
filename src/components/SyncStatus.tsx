@@ -54,6 +54,8 @@ const SyncStatusComponent: Component = () => {
         return "✓";
       case "pending":
         return "⏳";
+      case "manual":
+        return "🔄";
       case "offline":
         return "📱";
       case "error":
@@ -69,6 +71,8 @@ const SyncStatusComponent: Component = () => {
         return "Synced";
       case "pending":
         return "Syncing...";
+      case "manual":
+        return "Manual Sync";
       case "offline":
         return "Offline";
       case "error":
@@ -84,6 +88,8 @@ const SyncStatusComponent: Component = () => {
         return "text-green-600";
       case "pending":
         return "text-yellow-600";
+      case "manual":
+        return "text-blue-600";
       case "offline":
         return "text-gray-600";
       case "error":
