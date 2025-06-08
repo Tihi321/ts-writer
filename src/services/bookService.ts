@@ -1,4 +1,5 @@
 import { bookManagerService } from "./bookManager";
+import { dataService } from "./dataService";
 
 export const bookService = {
   // List all books (backward compatibility - returns book names)
@@ -146,28 +147,43 @@ export const bookService = {
   // Sync operations
   async syncBookWithCloud(bookId: string, direction: "push" | "pull") {
     try {
-      return await bookManagerService.syncBookWithCloud(bookId, direction);
+      // Set global sync state to coordinate with SyncStatusComponent
+      dataService.setSyncInProgress(true);
+      const result = await bookManagerService.syncBookWithCloud(bookId, direction);
+      return result;
     } catch (error) {
       console.error("Error syncing book:", error);
       throw error;
+    } finally {
+      dataService.setSyncInProgress(false);
     }
   },
 
   async exportBookToCloud(bookId: string) {
     try {
-      return await bookManagerService.exportBookToCloud(bookId);
+      // Set global sync state to coordinate with SyncStatusComponent
+      dataService.setSyncInProgress(true);
+      const result = await bookManagerService.exportBookToCloud(bookId);
+      return result;
     } catch (error) {
       console.error("Error exporting book to cloud:", error);
       throw error;
+    } finally {
+      dataService.setSyncInProgress(false);
     }
   },
 
   async importCloudBook(cloudBookId: string) {
     try {
-      return await bookManagerService.importCloudBook(cloudBookId);
+      // Set global sync state to coordinate with SyncStatusComponent
+      dataService.setSyncInProgress(true);
+      const result = await bookManagerService.importCloudBook(cloudBookId);
+      return result;
     } catch (error) {
       console.error("Error importing cloud book:", error);
       throw error;
+    } finally {
+      dataService.setSyncInProgress(false);
     }
   },
 

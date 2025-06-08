@@ -267,7 +267,12 @@ class IndexedDBService {
     return chapter?.content || null;
   }
 
-  async saveChapterContent(bookId: string, fileName: string, content: string): Promise<void> {
+  async saveChapterContent(
+    bookId: string,
+    fileName: string,
+    content: string,
+    isSync: boolean = false
+  ): Promise<void> {
     const db = this.ensureDB();
     const key = `${bookId}:${fileName}`;
     const now = Date.now();
@@ -278,14 +283,15 @@ class IndexedDBService {
       fileName,
       content,
       lastModified: now,
-      syncStatus: "pending",
+      syncStatus: isSync ? "synced" : "pending",
     });
 
     // Update book's last modified time and sync status
     const book = await this.getBook(bookId);
     if (book) {
       book.localLastModified = now;
-      if (book.source === "imported" || book.source === "cloud") {
+      // Only mark as out of sync if this is not a sync operation
+      if (!isSync && (book.source === "imported" || book.source === "cloud")) {
         book.syncStatus = "out_of_sync";
       }
       await this.saveBook(book);

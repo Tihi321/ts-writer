@@ -195,7 +195,7 @@ class BookManagerService {
 
       // Import all chapters
       for (const [fileName, content] of Object.entries(chapters)) {
-        await indexedDBService.saveChapterContent(cloudBookId, fileName, content);
+        await indexedDBService.saveChapterContent(cloudBookId, fileName, content, true);
       }
 
       // Mark chapters as synced
@@ -332,7 +332,7 @@ class BookManagerService {
 
     // Update/create chapters from cloud
     for (const [fileName, content] of Object.entries(chapters)) {
-      await indexedDBService.saveChapterContent(bookId, fileName, content);
+      await indexedDBService.saveChapterContent(bookId, fileName, content, true);
       await indexedDBService.markAsSynced("chapter", `${bookId}:${fileName}`);
     }
   }
@@ -358,7 +358,7 @@ class BookManagerService {
     for (const fileName of chapterFiles) {
       const content = await indexedDBService.getChapterContent(sourceBookId, fileName);
       if (content) {
-        await indexedDBService.saveChapterContent(newBookId, fileName, content);
+        await indexedDBService.saveChapterContent(newBookId, fileName, content, false);
       }
     }
 
@@ -416,12 +416,17 @@ class BookManagerService {
     return await indexedDBService.getChapterContent(bookId, fileName);
   }
 
-  async saveChapterContent(bookId: string, fileName: string, content: string): Promise<void> {
+  async saveChapterContent(
+    bookId: string,
+    fileName: string,
+    content: string,
+    isSync: boolean = false
+  ): Promise<void> {
     const book = await this.getBook(bookId);
     if (!book) {
       throw new Error(`Book with id ${bookId} not found`);
     }
-    await indexedDBService.saveChapterContent(bookId, fileName, content);
+    await indexedDBService.saveChapterContent(bookId, fileName, content, isSync);
   }
 
   async deleteChapterContent(bookId: string, fileName: string): Promise<void> {

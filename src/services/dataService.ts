@@ -235,7 +235,7 @@ class DataService {
       }
 
       const outOfSyncBooks = await bookManagerService.listOutOfSyncBooks();
-      return outOfSyncBooks.length > 0 ? "pending" : "synced";
+      return outOfSyncBooks.length > 0 ? "manual" : "synced";
     } catch (error) {
       return "error";
     }
@@ -247,6 +247,10 @@ class DataService {
 
   isSyncInProgress(): boolean {
     return this.syncInProgress;
+  }
+
+  setSyncInProgress(inProgress: boolean): void {
+    this.syncInProgress = inProgress;
   }
 
   // Note: Auth state changes can be monitored through googleAuth.signedIn reactive signal
