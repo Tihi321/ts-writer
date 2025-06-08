@@ -43,9 +43,7 @@ class BookManagerService {
   }
 
   async getBook(bookId: string): Promise<BookEntry | null> {
-    console.log(`[BookManager] getBook called with ID: "${bookId}"`);
     const result = await indexedDBService.getBook(bookId);
-    console.log(`[BookManager] getBook result:`, result);
     return result;
   }
 

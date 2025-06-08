@@ -86,14 +86,22 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
 
   const handleDeleteBook = async () => {
     const dialog = deleteDialog();
-    if (!dialog.book || !dialog.deleteFrom) return;
+    if (!dialog.book || !dialog.deleteFrom) {
+      setError("Please select a delete option");
+      return;
+    }
 
     try {
+      setError(null);
+      console.log("Deleting book:", dialog.book.id, "from:", dialog.deleteFrom);
       await bookStore.deleteBook(dialog.book.id, dialog.deleteFrom);
       setDeleteDialog({ isOpen: false });
+      console.log("Delete successful, reloading books...");
       await loadBooks();
+      console.log("Books reloaded");
     } catch (err) {
-      setError("Failed to delete book");
+      console.error("Delete failed:", err);
+      setError(err instanceof Error ? err.message : "Failed to delete book");
     }
   };
 
@@ -289,19 +297,37 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                   </Show>
 
                   <hr class="my-1" />
-                  <button
-                    onClick={() => {
-                      setDeleteDialog({
-                        isOpen: true,
-                        book,
-                        deleteFrom: book.source === "local" ? "local" : "both",
-                      });
-                      setShowMenu(false);
-                    }}
-                    class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                  >
-                    🗑️ Delete
-                  </button>
+                  <Show when={book.source === "local"}>
+                    <button
+                      onClick={() => {
+                        setDeleteDialog({
+                          isOpen: true,
+                          book,
+                          deleteFrom: "local",
+                        });
+                        setShowMenu(false);
+                      }}
+                      class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      🗑️ Delete Book
+                    </button>
+                  </Show>
+
+                  <Show when={book.source === "cloud" || book.source === "imported"}>
+                    <button
+                      onClick={() => {
+                        setDeleteDialog({
+                          isOpen: true,
+                          book,
+                          deleteFrom: "local",
+                        });
+                        setShowMenu(false);
+                      }}
+                      class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      🗑️ Delete Book...
+                    </button>
+                  </Show>
                 </div>
               </div>
             </Show>
@@ -532,14 +558,142 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
 
       {/* Delete Confirmation Dialog */}
       <Show when={deleteDialog().isOpen}>
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
           <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div class="p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-2">Delete Book</h3>
               <p class="text-gray-600 mb-4">
-                Are you sure you want to delete "{deleteDialog().book?.name}"? This action cannot be
+                Choose where to delete "{deleteDialog().book?.name}" from. This action cannot be
                 undone.
               </p>
+
+              {/* Warning for cloud deletions */}
+              <Show
+                when={deleteDialog().deleteFrom === "cloud" || deleteDialog().deleteFrom === "both"}
+              >
+                <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                  <div class="flex items-start">
+                    <svg
+                      class="w-5 h-5 text-yellow-600 mr-2 mt-0.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"
+                      />
+                    </svg>
+                    <div>
+                      <p class="text-sm font-medium text-yellow-800">Warning: Cloud Deletion</p>
+                      <p class="text-xs text-yellow-700 mt-1">
+                        {deleteDialog().deleteFrom === "cloud"
+                          ? "This will permanently remove the book from your cloud storage. You'll need to be signed in to Google Drive."
+                          : "This will permanently remove the book from both your device and cloud storage. This action cannot be undone."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Show>
+
+              {/* Delete options */}
+              <div class="space-y-3 mb-6">
+                <Show when={deleteDialog().book?.source === "local"}>
+                  <div class="p-3 border rounded-lg bg-gray-50">
+                    <div class="flex items-center">
+                      <input
+                        type="radio"
+                        id="delete-local-only"
+                        name="deleteOption"
+                        checked={deleteDialog().deleteFrom === "local"}
+                        onChange={() =>
+                          setDeleteDialog((prev) => ({ ...prev, deleteFrom: "local" }))
+                        }
+                        class="mr-3"
+                      />
+                      <label for="delete-local-only" class="text-sm font-medium text-gray-900">
+                        💾 Delete from Local Storage Only
+                      </label>
+                    </div>
+                    <p class="text-xs text-gray-600 ml-6">
+                      Remove the book from this device only. (This is a local-only book)
+                    </p>
+                  </div>
+                </Show>
+
+                <Show
+                  when={
+                    deleteDialog().book?.source === "cloud" ||
+                    deleteDialog().book?.source === "imported"
+                  }
+                >
+                  <div class="p-3 border rounded-lg bg-gray-50">
+                    <div class="flex items-center">
+                      <input
+                        type="radio"
+                        id="delete-local"
+                        name="deleteOption"
+                        checked={deleteDialog().deleteFrom === "local"}
+                        onChange={() =>
+                          setDeleteDialog((prev) => ({ ...prev, deleteFrom: "local" }))
+                        }
+                        class="mr-3"
+                      />
+                      <label for="delete-local" class="text-sm font-medium text-gray-900">
+                        💾 Delete from Local Storage Only
+                      </label>
+                    </div>
+                    <p class="text-xs text-gray-600 ml-6">
+                      Remove the book from this device only. Cloud copy remains intact.
+                    </p>
+                  </div>
+
+                  <div class="p-3 border rounded-lg bg-red-50">
+                    <div class="flex items-center">
+                      <input
+                        type="radio"
+                        id="delete-cloud"
+                        name="deleteOption"
+                        checked={deleteDialog().deleteFrom === "cloud"}
+                        onChange={() =>
+                          setDeleteDialog((prev) => ({ ...prev, deleteFrom: "cloud" }))
+                        }
+                        class="mr-3"
+                      />
+                      <label for="delete-cloud" class="text-sm font-medium text-gray-900">
+                        ☁️ Delete from Cloud Only
+                      </label>
+                    </div>
+                    <p class="text-xs text-gray-600 ml-6">
+                      Remove the book from cloud storage only. Local copy remains.
+                    </p>
+                  </div>
+
+                  <div class="p-3 border rounded-lg bg-red-100">
+                    <div class="flex items-center">
+                      <input
+                        type="radio"
+                        id="delete-both"
+                        name="deleteOption"
+                        checked={deleteDialog().deleteFrom === "both"}
+                        onChange={() =>
+                          setDeleteDialog((prev) => ({ ...prev, deleteFrom: "both" }))
+                        }
+                        class="mr-3"
+                      />
+                      <label for="delete-both" class="text-sm font-medium text-gray-900">
+                        🗑️ Delete from Both Local and Cloud
+                      </label>
+                    </div>
+                    <p class="text-xs text-gray-600 ml-6">
+                      Permanently remove the book from both this device and cloud storage.
+                    </p>
+                  </div>
+                </Show>
+              </div>
+
               <div class="flex gap-3 justify-end">
                 <button
                   onClick={() => setDeleteDialog({ isOpen: false })}
@@ -549,9 +703,17 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                 </button>
                 <button
                   onClick={handleDeleteBook}
-                  class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  disabled={!deleteDialog().deleteFrom}
+                  class={`px-4 py-2 rounded-md transition-colors ${
+                    deleteDialog().deleteFrom
+                      ? "bg-red-600 text-white hover:bg-red-700"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
                 >
-                  Delete
+                  {deleteDialog().deleteFrom === "local" && "Delete Locally"}
+                  {deleteDialog().deleteFrom === "cloud" && "Delete from Cloud"}
+                  {deleteDialog().deleteFrom === "both" && "Delete Everywhere"}
+                  {!deleteDialog().deleteFrom && "Select Option"}
                 </button>
               </div>
             </div>
@@ -561,7 +723,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
 
       {/* Rename Dialog */}
       <Show when={renameDialog().isOpen}>
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
           <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div class="p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-2">Rename Book</h3>
