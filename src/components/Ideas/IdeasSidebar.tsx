@@ -64,7 +64,7 @@ const IdeaItem: Component<{
 
   return (
     <div
-      class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer group relative hover:shadow-md transition-all duration-200 hover:border-gray-300"
+      class="p-4 border border-gray-200 cursor-pointer group relative hover:border-gray-300 transition-all duration-200"
       draggable={!isEditing()}
       onDragStart={(e) => !isEditing() && props.onDragStart(e, props.idea)}
       onDragOver={props.onDragOver}
@@ -90,7 +90,7 @@ const IdeaItem: Component<{
                     e.stopPropagation();
                     handleEdit();
                   }}
-                  class="text-gray-500 hover:text-gray-700 text-lg p-1 hover:bg-gray-100 rounded transition-colors"
+                  class="text-gray-500 hover:text-gray-700 text-lg p-1 border border-gray-300 hover:border-gray-400 transition-colors"
                   title="Edit idea"
                 >
                   ✏️
@@ -100,7 +100,7 @@ const IdeaItem: Component<{
                     e.stopPropagation();
                     setShowDeleteConfirm(true);
                   }}
-                  class="text-red-500 hover:text-red-700 text-lg p-1 hover:bg-red-50 rounded transition-colors"
+                  class="text-gray-500 hover:text-gray-700 text-lg p-1 border border-gray-300 hover:border-gray-400 transition-colors"
                   title="Delete idea"
                 >
                   🗑️
@@ -109,12 +109,12 @@ const IdeaItem: Component<{
             </div>
           }
         >
-          <div class="flex-1 flex flex-col space-y-3">
+          <div class="flex-1 space-y-3">
             <textarea
               value={editText()}
               onInput={(e) => setEditText(e.currentTarget.value)}
               onKeyDown={handleKeyPress}
-              class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm typewriter-text resize-none bg-white focus:border-gray-500 focus:outline-none"
+              class="flex-1 px-3 py-2 border border-gray-300 text-sm typewriter-text resize-none focus:border-gray-500 focus:outline-none"
               onClick={(e) => e.stopPropagation()}
               rows="3"
               autofocus
@@ -125,7 +125,7 @@ const IdeaItem: Component<{
                   e.stopPropagation();
                   handleSaveEdit();
                 }}
-                class="text-green-700 hover:text-green-900 text-sm px-3 py-1 bg-green-50 hover:bg-green-100 rounded-md font-medium transition-colors border border-green-200"
+                class="text-gray-700 hover:text-gray-900 text-sm px-3 py-1 border border-gray-300 hover:border-gray-400 font-medium transition-colors"
                 title="Save"
               >
                 ✓ Save
@@ -135,7 +135,7 @@ const IdeaItem: Component<{
                   e.stopPropagation();
                   handleCancelEdit();
                 }}
-                class="text-gray-600 hover:text-gray-800 text-sm px-3 py-1 bg-gray-50 hover:bg-gray-100 rounded-md font-medium transition-colors border border-gray-200"
+                class="text-gray-600 hover:text-gray-800 text-sm px-3 py-1 border border-gray-300 hover:border-gray-400 font-medium transition-colors"
                 title="Cancel"
               >
                 ✕ Cancel
@@ -148,24 +148,23 @@ const IdeaItem: Component<{
       {/* Delete Confirmation Modal */}
       <Show when={showDeleteConfirm()}>
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 border border-gray-200">
+          <div class="bg-white p-6 border border-gray-300 shadow-lg max-w-md w-full mx-4">
             <h3 class="text-lg font-semibold mb-4 text-gray-900">Delete Idea</h3>
-            <p class="text-gray-600 mb-4">Are you sure you want to delete this idea?</p>
-            <div class="bg-gray-50 p-3 rounded-md mb-4 text-sm text-gray-700 max-h-20 overflow-y-auto border border-gray-200">
-              "{props.idea.text}"
-            </div>
-            <div class="flex space-x-3">
-              <button
-                onClick={handleDelete}
-                class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-              >
-                Delete
-              </button>
+            <p class="text-gray-600 mb-6">
+              Are you sure you want to delete this idea? This action cannot be undone.
+            </p>
+            <div class="flex justify-end space-x-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md transition-colors"
+                class="px-4 py-2 text-gray-600 border border-gray-300 hover:text-gray-800 hover:border-gray-400 transition-colors"
               >
                 Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                class="px-4 py-2 text-gray-800 border border-gray-600 hover:text-gray-900 hover:border-gray-700 transition-colors"
+              >
+                Delete
               </button>
             </div>
           </div>
@@ -248,7 +247,7 @@ const IdeasSidebar: Component = () => {
     <Show
       when={chapterStore.selectedChapter()}
       fallback={
-        <div class="p-6 flex items-center justify-center h-full text-gray-500 bg-gray-50">
+        <div class="p-6 flex items-center justify-center h-full text-gray-500">
           <div class="text-center">
             <div class="text-5xl mb-4">💡</div>
             <p class="font-medium text-lg text-gray-700">Select a chapter to capture ideas</p>
@@ -257,15 +256,7 @@ const IdeasSidebar: Component = () => {
         </div>
       }
     >
-      <div class="p-6 bg-gray-50 h-full">
-        <div class="mb-6">
-          <h2 class="text-xl font-semibold text-gray-900 mb-2 flex items-center">
-            <span class="text-2xl mr-2">💡</span>
-            Ideas & Notes
-          </h2>
-          <p class="text-sm text-gray-600">for "{chapterStore.selectedChapter()?.title}"</p>
-        </div>
-
+      <div class="p-6 h-full">
         <Show when={ideaStore.loading()}>
           <p class="text-gray-500">Loading ideas...</p>
         </Show>
@@ -274,7 +265,7 @@ const IdeasSidebar: Component = () => {
           <For
             each={ideaStore.ideas()}
             fallback={
-              <div class="text-center p-8 bg-white rounded-lg border-2 border-dashed border-gray-300">
+              <div class="text-center p-8 border-2 border-dashed border-gray-300">
                 <div class="text-3xl mb-2">📝</div>
                 <p class="text-sm text-gray-500">No ideas captured yet</p>
                 <p class="text-xs text-gray-400 mt-1">Start writing your thoughts below</p>
@@ -294,14 +285,14 @@ const IdeasSidebar: Component = () => {
 
         <div class="space-y-3">
           <textarea
-            class="w-full p-4 border border-gray-300 rounded-lg typewriter-text h-24 bg-white focus:border-gray-500 focus:outline-none resize-none"
+            class="w-full p-4 border border-gray-300 typewriter-text h-24 focus:border-gray-500 focus:outline-none resize-none"
             placeholder="Capture a new idea..."
             value={newIdeaText()}
             onInput={(e) => setNewIdeaText(e.currentTarget.value)}
           />
           <button
             onClick={handleAddIdea}
-            class="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 shadow-sm"
+            class="w-full border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 font-medium py-3 px-4 transition-colors duration-200"
           >
             💡 Add Idea
           </button>

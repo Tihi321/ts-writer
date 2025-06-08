@@ -31,7 +31,7 @@ const App: Component = () => {
 
   return (
     <DragDropProvider>
-      <div class="flex flex-col h-screen bg-gray-50">
+      <div class="flex flex-col h-screen bg-white">
         {/* Settings Modal */}
         <SettingsModal />
 

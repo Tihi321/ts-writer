@@ -45,7 +45,7 @@ const CreateBookModal: Component<CreateBookModalProps> = (props) => {
   return (
     <Show when={props.isOpen}>
       <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="bg-white border border-gray-300 shadow-lg max-w-md w-full">
           {/* Header */}
           <div class="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 class="text-xl font-bold text-gray-900">Create New Book</h2>
@@ -71,7 +71,7 @@ const CreateBookModal: Component<CreateBookModalProps> = (props) => {
                 <label class="block text-sm font-medium text-gray-700 mb-2">Book Title</label>
                 <input
                   type="text"
-                  class="w-full p-3 border border-gray-300 rounded-lg text-gray-900 bg-white focus:border-blue-500 focus:outline-none"
+                  class="w-full p-3 border border-gray-300 text-gray-900 focus:border-gray-500 focus:outline-none"
                   placeholder="Enter your book title..."
                   value={newBookName()}
                   onInput={(e) => setNewBookName(e.currentTarget.value)}
@@ -84,8 +84,8 @@ const CreateBookModal: Component<CreateBookModalProps> = (props) => {
               </div>
 
               <Show when={error()}>
-                <div class="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p class="text-sm text-red-700">{error()}</p>
+                <div class="border border-gray-400 p-3">
+                  <p class="text-sm text-gray-700">{error()}</p>
                 </div>
               </Show>
             </div>
@@ -95,18 +95,18 @@ const CreateBookModal: Component<CreateBookModalProps> = (props) => {
           <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
             <button
               onClick={handleClose}
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 hover:text-gray-800 hover:border-gray-400 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleCreateBook}
               disabled={!newBookName().trim() || isCreating()}
-              class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              class="px-4 py-2 text-sm font-medium border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 disabled:border-gray-400 disabled:text-gray-400 transition-colors"
             >
               {isCreating() ? (
                 <div class="flex items-center space-x-2">
-                  <div class="animate-spin rounded-full h-4 w-4 border-b border-white"></div>
+                  <div class="animate-spin rounded-full h-4 w-4 border-b border-gray-600"></div>
                   <span>Creating...</span>
                 </div>
               ) : (

@@ -677,7 +677,7 @@ const EditorArea: Component = () => {
     <Show
       when={chapterStore.selectedChapter()}
       fallback={
-        <div class="flex items-center justify-center h-full text-gray-500 bg-white">
+        <div class="flex items-center justify-center h-full text-gray-500">
           <div class="text-center p-8">
             <div class="text-6xl mb-4">📖</div>
             <p class="font-medium text-lg text-gray-700">Select a chapter to start writing</p>
@@ -686,9 +686,9 @@ const EditorArea: Component = () => {
         </div>
       }
     >
-      <div class="flex flex-col h-full bg-white">
+      <div class="flex flex-col h-full">
         {/* Enhanced Toolbar */}
-        <div class="p-3 border-b border-gray-200 bg-white">
+        <div class="p-3 border-b border-gray-200">
           <div class="flex items-center justify-between">
             {/* Formatting Tools - Always Available */}
             <div class="flex items-center space-x-1">
@@ -697,21 +697,21 @@ const EditorArea: Component = () => {
               {/* Text Formatting */}
               <button
                 onClick={() => applyFormat("bold")}
-                class="px-2 py-1 text-xs font-bold hover:bg-gray-100 rounded transition-colors text-gray-700"
+                class="px-2 py-1 text-xs font-bold border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
                 title="Bold"
               >
                 B
               </button>
               <button
                 onClick={() => applyFormat("italic")}
-                class="px-2 py-1 text-xs italic hover:bg-gray-100 rounded transition-colors text-gray-700"
+                class="px-2 py-1 text-xs italic border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
                 title="Italic"
               >
                 I
               </button>
               <button
                 onClick={() => applyFormat("strikethrough")}
-                class="px-2 py-1 text-xs hover:bg-gray-100 rounded transition-colors text-gray-700 line-through"
+                class="px-2 py-1 text-xs border border-gray-300 hover:border-gray-400 transition-colors text-gray-700 line-through"
                 title="Strikethrough"
               >
                 S
@@ -722,21 +722,21 @@ const EditorArea: Component = () => {
               {/* Headers */}
               <button
                 onClick={() => applyFormat("h1")}
-                class="px-2 py-1 text-xs font-bold hover:bg-gray-100 rounded transition-colors text-gray-700"
+                class="px-2 py-1 text-xs font-bold border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
                 title="Heading 1"
               >
                 H1
               </button>
               <button
                 onClick={() => applyFormat("h2")}
-                class="px-2 py-1 text-xs font-semibold hover:bg-gray-100 rounded transition-colors text-gray-700"
+                class="px-2 py-1 text-xs font-semibold border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
                 title="Heading 2"
               >
                 H2
               </button>
               <button
                 onClick={() => applyFormat("h3")}
-                class="px-2 py-1 text-xs font-medium hover:bg-gray-100 rounded transition-colors text-gray-700"
+                class="px-2 py-1 text-xs font-medium border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
                 title="Heading 3"
               >
                 H3
@@ -747,14 +747,14 @@ const EditorArea: Component = () => {
               {/* Lists */}
               <button
                 onClick={() => applyFormat("bulletList")}
-                class="px-2 py-1 text-xs hover:bg-gray-100 rounded transition-colors text-gray-700"
+                class="px-2 py-1 text-xs border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
                 title="Bullet List"
               >
                 •
               </button>
               <button
                 onClick={() => applyFormat("orderedList")}
-                class="px-2 py-1 text-xs hover:bg-gray-100 rounded transition-colors text-gray-700"
+                class="px-2 py-1 text-xs border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
                 title="Numbered List"
               >
                 1.
@@ -765,21 +765,21 @@ const EditorArea: Component = () => {
               {/* Special Formatting */}
               <button
                 onClick={() => applyFormat("code")}
-                class="px-2 py-1 text-xs font-mono hover:bg-gray-100 rounded transition-colors text-gray-700"
+                class="px-2 py-1 text-xs font-mono border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
                 title="Inline Code"
               >
                 &lt;/&gt;
               </button>
               <button
                 onClick={() => applyFormat("blockquote")}
-                class="px-2 py-1 text-xs hover:bg-gray-100 rounded transition-colors text-gray-700"
+                class="px-2 py-1 text-xs border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
                 title="Quote"
               >
                 "
               </button>
               <button
                 onClick={() => applyFormat("link")}
-                class="px-2 py-1 text-xs hover:bg-gray-100 rounded transition-colors text-gray-700"
+                class="px-2 py-1 text-xs border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
                 title="Link"
               >
                 🔗
@@ -790,7 +790,7 @@ const EditorArea: Component = () => {
               {/* Clear Formatting */}
               <button
                 onClick={() => applyFormat("clear")}
-                class="px-2 py-1 text-xs hover:bg-gray-100 rounded transition-colors text-red-600"
+                class="px-2 py-1 text-xs border border-gray-300 hover:border-gray-400 transition-colors text-gray-600"
                 title="Clear Formatting"
               >
                 ✕
@@ -800,7 +800,7 @@ const EditorArea: Component = () => {
             {/* Single Mode Toggle */}
             <button
               onClick={() => setMode(mode() === "write" ? "code" : "write")}
-              class="flex items-center px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-gray-200 rounded-md transition-colors text-gray-700"
+              class="flex items-center px-3 py-1.5 text-xs font-medium border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
               title={mode() === "write" ? "Switch to Code View" : "Switch to Write View"}
             >
               {mode() === "write" ? <>&lt;/&gt; Code</> : <>✏️ Write</>}
@@ -809,14 +809,14 @@ const EditorArea: Component = () => {
         </div>
 
         {/* Editor Area */}
-        <div class="flex-grow flex flex-col p-6 bg-white overflow-y-auto">
+        <div class="flex-grow overflow-hidden">
           <Show
             when={mode() === "write"}
             fallback={
               /* Code Mode - Raw Markdown */
               <textarea
                 ref={textareaRef}
-                class="flex-grow w-full p-4 resize-none bg-gray-50 font-mono text-sm text-gray-800 leading-relaxed"
+                class="flex-grow w-full p-4 resize-none font-mono text-sm text-gray-800 leading-relaxed"
                 placeholder="# Start writing your markdown here..."
                 value={currentContent()}
                 onInput={(e) => setCurrentContent(e.currentTarget.value)}
@@ -838,7 +838,7 @@ const EditorArea: Component = () => {
                 }
               }}
               contentEditable={true}
-              class="flex-grow w-full p-4 resize-none bg-white prose prose-lg max-w-none typewriter-text prose-clean text-gray-800 leading-relaxed"
+              class="flex-grow w-full p-4 resize-none prose prose-lg max-w-none typewriter-text prose-clean text-gray-800 leading-relaxed"
               onInput={handleEditableInput}
               onFocus={() => setIsUserEditing(true)}
               onBlur={() => {

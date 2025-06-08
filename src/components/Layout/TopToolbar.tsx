@@ -126,14 +126,14 @@ const TopToolbar: Component = () => {
 
   return (
     <>
-      <div class="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+      <div class="fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-300">
         <div class="flex items-center justify-between px-4 py-2">
           {/* Left side - App info and back button */}
           <div class="flex items-center space-x-3">
             <Show when={bookStore.selectedBook()}>
               <button
                 onClick={() => bookStore.clearSelection()}
-                class="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-all duration-200"
+                class="p-1.5 border border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-all duration-200"
                 title="Back to Books"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,81 +162,54 @@ const TopToolbar: Component = () => {
 
                 {/* Sync Status Indicator */}
                 <Show when={bookStore.selectedBook()?.source !== "local"}>
-                  <span class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                  <span class="text-xs px-2 py-1 border border-gray-300 text-gray-600">
                     {bookStore.selectedBook()?.syncStatus === "in_sync" ? "✅" : "⚠️"}
                   </span>
                 </Show>
 
-                {/* Sync Buttons - Only for cloud/imported books */}
-                <Show
-                  when={
-                    bookStore.selectedBook()?.source !== "local" &&
-                    settingsStore.settings.googleSyncEnabled &&
-                    googleAuth.signedIn
+                {/* Pull Button - Always show when book is selected */}
+                <button
+                  onClick={() => handleSyncBook("pull")}
+                  disabled={
+                    syncing() || !settingsStore.settings.googleSyncEnabled || !googleAuth.signedIn
                   }
+                  class="p-1.5 border border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-all duration-200 disabled:opacity-50"
+                  title="Pull from Cloud (overwrite local with cloud)"
                 >
-                  <button
-                    onClick={() => handleSyncBook("pull")}
-                    disabled={syncing()}
-                    class="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-all duration-200 disabled:opacity-50"
-                    title="Pull from Cloud (overwrite local with cloud)"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleSyncBook("push")}
-                    disabled={syncing()}
-                    class="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-all duration-200 disabled:opacity-50"
-                    title="Push to Cloud (overwrite cloud with local)"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
-                  </button>
-                </Show>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+                    />
+                  </svg>
+                </button>
 
-                {/* Export to Cloud Button - Only for local books */}
-                <Show
-                  when={
-                    bookStore.selectedBook()?.source === "local" &&
-                    settingsStore.settings.googleSyncEnabled &&
-                    googleAuth.signedIn
+                {/* Push Button - Always show when book is selected */}
+                <button
+                  onClick={() => handleSyncBook("push")}
+                  disabled={
+                    syncing() || !settingsStore.settings.googleSyncEnabled || !googleAuth.signedIn
                   }
+                  class="p-1.5 border border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-all duration-200 disabled:opacity-50"
+                  title="Push to Cloud (overwrite cloud with local)"
                 >
-                  <button
-                    onClick={() => handleSyncBook("push")}
-                    disabled={syncing()}
-                    class="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-all duration-200 disabled:opacity-50"
-                    title="Export to Cloud"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                      />
-                    </svg>
-                  </button>
-                </Show>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                    />
+                  </svg>
+                </button>
 
                 <div class="w-px h-4 bg-gray-300"></div>
 
                 <button
                   onClick={() => setShowBookManagement(true)}
-                  class="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-all duration-200"
+                  class="p-1.5 border border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-all duration-200"
                   title="Manage Books"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -259,10 +232,10 @@ const TopToolbar: Component = () => {
               {/* Zen Mode Toggle */}
               <button
                 onClick={() => uiStore.toggleZenMode()}
-                class={`p-1.5 rounded-md transition-all duration-200 ${
+                class={`p-1.5 border transition-all duration-200 ${
                   uiStore.isZenMode()
-                    ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
-                    : "hover:bg-gray-100 text-gray-600 hover:text-gray-800"
+                    ? "border-gray-600 text-gray-800"
+                    : "border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
                 }`}
                 title={
                   uiStore.isZenMode()
@@ -289,10 +262,10 @@ const TopToolbar: Component = () => {
               {/* Chapters Panel Toggle */}
               <button
                 onClick={() => uiStore.toggleChapters()}
-                class={`p-1.5 rounded-md transition-all duration-200 ${
+                class={`p-1.5 border transition-all duration-200 ${
                   uiStore.showChapters()
-                    ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                    : "hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                    ? "border-gray-600 text-gray-800"
+                    : "border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400"
                 }`}
                 title={
                   uiStore.showChapters()
@@ -313,10 +286,10 @@ const TopToolbar: Component = () => {
               {/* Ideas Panel Toggle */}
               <button
                 onClick={() => uiStore.toggleIdeas()}
-                class={`p-1.5 rounded-md transition-all duration-200 ${
+                class={`p-1.5 border transition-all duration-200 ${
                   uiStore.showIdeas()
-                    ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                    : "hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                    ? "border-gray-600 text-gray-800"
+                    : "border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400"
                 }`}
                 title={
                   uiStore.showIdeas()
@@ -340,7 +313,7 @@ const TopToolbar: Component = () => {
             {/* Autosave Status and Save Button - Only show when a book is selected */}
             <Show when={bookStore.selectedBook()}>
               <Show when={settingsStore.settings.autoSave}>
-                <span class="text-xs text-green-600 font-medium flex items-center space-x-1">
+                <span class="text-xs text-gray-600 font-medium flex items-center space-x-1 border border-gray-300 px-2 py-1">
                   <span>✨</span>
                   <span class="hidden sm:inline">Autosave</span>
                 </span>
@@ -349,7 +322,7 @@ const TopToolbar: Component = () => {
                 <button
                   onClick={handleSave}
                   disabled={saving()}
-                  class="text-xs bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white font-medium py-1.5 px-3 rounded transition-colors duration-200"
+                  class="text-xs border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 disabled:border-gray-400 disabled:text-gray-400 font-medium py-1.5 px-3 transition-colors duration-200"
                   title="Save Chapter"
                 >
                   {saving() ? "💾 Saving..." : "💾 Save"}
@@ -361,7 +334,7 @@ const TopToolbar: Component = () => {
             {/* Settings Button */}
             <button
               onClick={() => settingsStore.openSettings()}
-              class="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition-all duration-200"
+              class="p-1.5 border border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-all duration-200"
               title="Settings"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -400,7 +373,7 @@ const TopToolbar: Component = () => {
                 <img
                   src={googleAuth.currentUser!.picture}
                   alt={googleAuth.currentUser!.name}
-                  class="w-6 h-6 rounded-full"
+                  class="w-6 h-6 rounded-full border border-gray-300"
                   title={`Signed in as ${googleAuth.currentUser!.name}`}
                 />
                 <span class="text-xs text-gray-600 hidden sm:inline">
@@ -415,10 +388,13 @@ const TopToolbar: Component = () => {
 
       {/* Sync Error Toast */}
       <Show when={syncError()}>
-        <div class="fixed top-16 right-4 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg max-w-md">
+        <div class="fixed top-16 right-4 z-50 border border-gray-400 text-gray-700 px-4 py-3 bg-white shadow-lg max-w-md">
           <div class="flex items-center justify-between">
             <span class="text-sm">{syncError()}</span>
-            <button onClick={() => setSyncError(null)} class="ml-2 text-red-500 hover:text-red-700">
+            <button
+              onClick={() => setSyncError(null)}
+              class="ml-2 text-gray-500 hover:text-gray-700"
+            >
               ×
             </button>
           </div>
@@ -427,12 +403,12 @@ const TopToolbar: Component = () => {
 
       {/* Sync Success Toast */}
       <Show when={syncSuccess()}>
-        <div class="fixed top-16 right-4 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg max-w-md">
+        <div class="fixed top-16 right-4 z-50 border border-gray-400 text-gray-700 px-4 py-3 bg-white shadow-lg max-w-md">
           <div class="flex items-center justify-between">
             <span class="text-sm">{syncSuccess()}</span>
             <button
               onClick={() => setSyncSuccess(null)}
-              class="ml-2 text-green-500 hover:text-green-700"
+              class="ml-2 text-gray-500 hover:text-gray-700"
             >
               ×
             </button>

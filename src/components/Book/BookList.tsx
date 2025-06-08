@@ -11,8 +11,8 @@ const BookList: Component = () => {
 
   return (
     <>
-      <div class="flex flex-col items-center justify-center h-full bg-gray-50">
-        <div class="p-8 bg-white shadow-lg rounded-lg border border-gray-200 max-w-md w-full mx-4">
+      <div class="flex flex-col items-center justify-center h-full">
+        <div class="p-8 border border-gray-300 max-w-md w-full mx-4">
           <div class="text-center mb-6">
             <div class="text-6xl mb-4">📚</div>
             <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome to TSWriter</h2>
@@ -25,7 +25,7 @@ const BookList: Component = () => {
           <div class="space-y-4">
             <button
               onClick={() => setShowCreateModal(true)}
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 shadow-sm"
+              class="w-full border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 font-medium py-3 px-4 transition-colors duration-200"
             >
               <div class="flex items-center justify-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +42,7 @@ const BookList: Component = () => {
 
             <button
               onClick={() => setShowLoadModal(true)}
-              class="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 shadow-sm"
+              class="w-full border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 font-medium py-3 px-4 transition-colors duration-200"
             >
               <div class="flex items-center justify-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +59,7 @@ const BookList: Component = () => {
 
             <button
               onClick={() => setShowManagementModal(true)}
-              class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 shadow-sm"
+              class="w-full border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 font-medium py-3 px-4 transition-colors duration-200"
             >
               <div class="flex items-center justify-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,7 +76,7 @@ const BookList: Component = () => {
 
             <button
               onClick={() => settingsStore.openSettings()}
-              class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200 border border-gray-300"
+              class="w-full border border-gray-300 text-gray-700 hover:text-gray-800 hover:border-gray-400 font-medium py-3 px-4 transition-colors duration-200"
             >
               <div class="flex items-center justify-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

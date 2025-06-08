@@ -183,13 +183,13 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
   const getSourceBadgeClass = (source: BookSummary["source"]) => {
     switch (source) {
       case "local":
-        return "bg-blue-100 text-blue-800";
+        return "border border-gray-300 text-gray-700";
       case "cloud":
-        return "bg-purple-100 text-purple-800";
+        return "border border-gray-300 text-gray-700";
       case "imported":
-        return "bg-green-100 text-green-800";
+        return "border border-gray-300 text-gray-700";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "border border-gray-300 text-gray-700";
     }
   };
 
@@ -199,8 +199,8 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
 
     return (
       <div
-        class={`border rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
-          isSelected() ? "ring-2 ring-blue-500 bg-blue-50" : "bg-white"
+        class={`border p-4 cursor-pointer transition-all hover:border-gray-400 ${
+          isSelected() ? "border-gray-600" : "border-gray-300"
         }`}
       >
         <div class="flex items-start justify-between">
@@ -209,11 +209,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
             <div class="flex items-center gap-2 mt-1 text-sm text-gray-600">
               <span>{getSyncStatusIcon(book.syncStatus)}</span>
               <span>{getSyncStatusText(book.syncStatus)}</span>
-              <span
-                class={`px-2 py-1 rounded-full text-xs font-medium ${getSourceBadgeClass(
-                  book.source
-                )}`}
-              >
+              <span class={`px-2 py-1 text-xs font-medium ${getSourceBadgeClass(book.source)}`}>
                 {book.source}
               </span>
             </div>
@@ -235,14 +231,14 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
             </button>
 
             <Show when={showMenu()}>
-              <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+              <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-300 shadow-lg z-10">
                 <div class="py-1">
                   <button
                     onClick={() => {
                       handleSelectBook(book);
                       setShowMenu(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:border-gray-400"
                   >
                     📖 Open Book
                   </button>
@@ -251,7 +247,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                       setRenameDialog({ isOpen: true, book, newName: book.name });
                       setShowMenu(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:border-gray-400"
                   >
                     ✏️ Rename
                   </button>
@@ -260,7 +256,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                       handleDuplicateBook(book);
                       setShowMenu(false);
                     }}
-                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:border-gray-400"
                   >
                     📋 Duplicate
                   </button>
@@ -272,7 +268,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                         handleSyncBook(book, "pull");
                         setShowMenu(false);
                       }}
-                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:border-gray-400"
                     >
                       ⬇️ Pull from Cloud
                     </button>
@@ -281,7 +277,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                         handleSyncBook(book, "push");
                         setShowMenu(false);
                       }}
-                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:border-gray-400"
                     >
                       ⬆️ Push to Cloud
                     </button>
@@ -294,7 +290,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                         handleSyncBook(book, "push");
                         setShowMenu(false);
                       }}
-                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:border-gray-400"
                     >
                       ⬆️ Export to Cloud
                     </button>
@@ -311,7 +307,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                         });
                         setShowMenu(false);
                       }}
-                      class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      class="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
                     >
                       🗑️ Delete Book
                     </button>
@@ -327,7 +323,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                         });
                         setShowMenu(false);
                       }}
-                      class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      class="block w-full text-left px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
                     >
                       🗑️ Delete Book...
                     </button>
@@ -352,7 +348,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
   return (
     <Show when={props.isOpen}>
       <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+        <div class="bg-white border border-gray-300 shadow-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
           {/* Header */}
           <div class="flex items-center justify-between p-6 border-b border-gray-200">
             <div>
@@ -383,7 +379,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                 onClick={() => setActiveTab("local")}
                 class={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab() === "local"
-                    ? "border-blue-500 text-blue-600"
+                    ? "border-gray-600 text-gray-800"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
@@ -393,7 +389,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                 onClick={() => setActiveTab("cloud")}
                 class={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab() === "cloud"
-                    ? "border-blue-500 text-blue-600"
+                    ? "border-gray-600 text-gray-800"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
@@ -403,7 +399,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                 onClick={() => setActiveTab("available")}
                 class={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab() === "available"
-                    ? "border-blue-500 text-blue-600"
+                    ? "border-gray-600 text-gray-800"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
@@ -413,11 +409,9 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
           </div>
 
           {/* Content */}
-          <div class="p-6 overflow-auto max-h-[50vh]">
+          <div class="p-6 overflow-y-auto max-h-[60vh]">
             <Show when={error()}>
-              <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                {error()}
-              </div>
+              <div class="mb-4 p-3 border border-gray-400 text-gray-700">{error()}</div>
             </Show>
 
             {/* Local Books Tab */}
@@ -427,14 +421,14 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                   <h3 class="text-lg font-semibold">Local Books</h3>
                   <button
                     onClick={() => setShowCreateForm(true)}
-                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                    class="px-4 py-2 border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 transition-colors text-sm"
                   >
                     ➕ New Book
                   </button>
                 </div>
 
                 <Show when={showCreateForm()}>
-                  <div class="border rounded-lg p-4 bg-gray-50">
+                  <div class="border border-gray-300 p-4">
                     <div class="flex gap-2">
                       <input
                         type="text"
@@ -442,11 +436,11 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                         value={newBookName()}
                         onInput={(e) => setNewBookName(e.currentTarget.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleCreateBook()}
-                        class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        class="flex-1 px-3 py-2 border border-gray-300 focus:outline-none focus:border-gray-500"
                       />
                       <button
                         onClick={handleCreateBook}
-                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        class="px-4 py-2 border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 transition-colors"
                       >
                         Create
                       </button>
@@ -456,7 +450,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                           setNewBookName("");
                           setError(null);
                         }}
-                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                        class="px-4 py-2 border border-gray-300 text-gray-700 hover:text-gray-800 hover:border-gray-400 transition-colors"
                       >
                         Cancel
                       </button>
@@ -483,7 +477,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                   <h3 class="text-lg font-semibold">Cloud Books</h3>
                   <button
                     onClick={loadBooks}
-                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
+                    class="px-4 py-2 border border-gray-300 text-gray-700 hover:text-gray-800 hover:border-gray-400 transition-colors text-sm"
                   >
                     🔄 Refresh
                   </button>
@@ -495,23 +489,21 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                     <div class="text-center py-8 text-gray-500">
                       <div class="text-4xl mb-4">☁️</div>
                       <p>No cloud books found.</p>
-                      <p class="text-sm mt-2">
-                        Import books from the Available tab or export local books to cloud.
-                      </p>
+                      <p class="text-sm mt-2">Books you sync to cloud will appear here.</p>
                     </div>
                   </Show>
                 </div>
               </div>
             </Show>
 
-            {/* Available Cloud Books Tab */}
+            {/* Available Books Tab */}
             <Show when={activeTab() === "available"}>
               <div class="space-y-4">
                 <div class="flex items-center justify-between">
                   <h3 class="text-lg font-semibold">Available Cloud Books</h3>
                   <button
                     onClick={loadBooks}
-                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
+                    class="px-4 py-2 border border-gray-300 text-gray-700 hover:text-gray-800 hover:border-gray-400 transition-colors text-sm"
                   >
                     🔄 Refresh
                   </button>
@@ -520,7 +512,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                 <div class="grid gap-4">
                   <For each={availableCloudBooks()}>
                     {(book) => (
-                      <div class="border rounded-lg p-4 bg-white">
+                      <div class="border border-gray-300 p-4">
                         <div class="flex items-start justify-between">
                           <div>
                             <h3 class="font-semibold text-lg text-gray-900">{book.name}</h3>
@@ -531,7 +523,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                           </div>
                           <button
                             onClick={() => handleImportCloudBook(book)}
-                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                            class="px-4 py-2 border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 transition-colors text-sm"
                           >
                             ⬇️ Import
                           </button>
@@ -552,7 +544,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
 
             <Show when={loading()}>
               <div class="flex items-center justify-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b border-blue-600 mr-3"></div>
+                <div class="animate-spin rounded-full h-8 w-8 border-b border-gray-600 mr-3"></div>
                 <span class="text-gray-600">Loading books...</span>
               </div>
             </Show>
@@ -563,7 +555,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
       {/* Delete Confirmation Dialog */}
       <Show when={deleteDialog().isOpen}>
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
-          <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div class="bg-white border border-gray-300 shadow-lg max-w-md w-full">
             <div class="p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-2">Delete Book</h3>
               <p class="text-gray-600 mb-4">
@@ -575,37 +567,17 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
               <Show
                 when={deleteDialog().deleteFrom === "cloud" || deleteDialog().deleteFrom === "both"}
               >
-                <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
-                  <div class="flex items-start">
-                    <svg
-                      class="w-5 h-5 text-yellow-600 mr-2 mt-0.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"
-                      />
-                    </svg>
-                    <div>
-                      <p class="text-sm font-medium text-yellow-800">Warning: Cloud Deletion</p>
-                      <p class="text-xs text-yellow-700 mt-1">
-                        {deleteDialog().deleteFrom === "cloud"
-                          ? "This will permanently remove the book from your cloud storage. You'll need to be signed in to Google Drive."
-                          : "This will permanently remove the book from both your device and cloud storage. This action cannot be undone."}
-                      </p>
-                    </div>
-                  </div>
+                <div class="p-3 border border-gray-400 mb-4">
+                  <p class="text-sm text-gray-700">
+                    ⚠️ Warning: Deleting from cloud will permanently remove the book from your
+                    Google Drive.
+                  </p>
                 </div>
               </Show>
 
-              {/* Delete options */}
               <div class="space-y-3 mb-6">
                 <Show when={deleteDialog().book?.source === "local"}>
-                  <div class="p-3 border rounded-lg bg-gray-50">
+                  <div class="p-3 border border-gray-300">
                     <div class="flex items-center">
                       <input
                         type="radio"
@@ -633,7 +605,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                     deleteDialog().book?.source === "imported"
                   }
                 >
-                  <div class="p-3 border rounded-lg bg-gray-50">
+                  <div class="p-3 border border-gray-300">
                     <div class="flex items-center">
                       <input
                         type="radio"
@@ -654,7 +626,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                     </p>
                   </div>
 
-                  <div class="p-3 border rounded-lg bg-red-50">
+                  <div class="p-3 border border-gray-300">
                     <div class="flex items-center">
                       <input
                         type="radio"
@@ -675,7 +647,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                     </p>
                   </div>
 
-                  <div class="p-3 border rounded-lg bg-red-100">
+                  <div class="p-3 border border-gray-400">
                     <div class="flex items-center">
                       <input
                         type="radio"
@@ -701,17 +673,17 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
               <div class="flex gap-3 justify-end">
                 <button
                   onClick={() => setDeleteDialog({ isOpen: false })}
-                  class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                  class="px-4 py-2 border border-gray-300 text-gray-700 hover:text-gray-800 hover:border-gray-400 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteBook}
                   disabled={!deleteDialog().deleteFrom}
-                  class={`px-4 py-2 rounded-md transition-colors ${
+                  class={`px-4 py-2 border transition-colors ${
                     deleteDialog().deleteFrom
-                      ? "bg-red-600 text-white hover:bg-red-700"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      ? "border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700"
+                      : "border-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
                   {deleteDialog().deleteFrom === "local" && "Delete Locally"}
@@ -728,7 +700,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
       {/* Rename Dialog */}
       <Show when={renameDialog().isOpen}>
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
-          <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div class="bg-white border border-gray-300 shadow-lg max-w-md w-full">
             <div class="p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-2">Rename Book</h3>
               <p class="text-gray-600 mb-4">Enter a new name for "{renameDialog().book?.name}":</p>
@@ -740,18 +712,18 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                 }
                 onKeyDown={(e) => e.key === "Enter" && handleRenameBook()}
                 placeholder="Enter new book name..."
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+                class="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-gray-500 mb-4"
               />
               <div class="flex gap-3 justify-end">
                 <button
                   onClick={() => setRenameDialog({ isOpen: false, newName: "" })}
-                  class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                  class="px-4 py-2 border border-gray-300 text-gray-700 hover:text-gray-800 hover:border-gray-400 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleRenameBook}
-                  class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  class="px-4 py-2 border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 transition-colors"
                 >
                   Rename
                 </button>

@@ -46,20 +46,20 @@ const LoadBookModal: Component<LoadBookModalProps> = (props) => {
   const getSourceBadgeClass = (source: BookSummary["source"]) => {
     switch (source) {
       case "local":
-        return "bg-blue-100 text-blue-800";
+        return "border border-gray-300 text-gray-700";
       case "cloud":
-        return "bg-purple-100 text-purple-800";
+        return "border border-gray-300 text-gray-700";
       case "imported":
-        return "bg-green-100 text-green-800";
+        return "border border-gray-300 text-gray-700";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "border border-gray-300 text-gray-700";
     }
   };
 
   return (
     <Show when={props.isOpen}>
       <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+        <div class="bg-white border border-gray-300 shadow-lg max-w-lg w-full">
           {/* Header */}
           <div class="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 class="text-xl font-bold text-gray-900">Load Book</h2>
@@ -99,14 +99,14 @@ const LoadBookModal: Component<LoadBookModalProps> = (props) => {
                     {(book) => (
                       <button
                         onClick={() => handleSelectBook(book)}
-                        class={`w-full text-left p-3 border rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        class={`w-full text-left p-3 border hover:border-gray-400 transition-colors ${
                           bookStore.selectedBookId() === book.id
-                            ? "border-blue-500 bg-blue-50"
-                            : "border-gray-200"
+                            ? "border-gray-600"
+                            : "border-gray-300"
                         }`}
                       >
                         <div class="flex items-center space-x-3">
-                          <div class="text-blue-600">📖</div>
+                          <div class="text-gray-600">📖</div>
                           <div class="flex-1">
                             <p class="font-medium text-gray-900">{book.name}</p>
                             <div class="flex items-center gap-2 mt-1">
@@ -115,7 +115,7 @@ const LoadBookModal: Component<LoadBookModalProps> = (props) => {
                                 {getSyncStatusText(book.syncStatus)}
                               </span>
                               <span
-                                class={`px-2 py-0.5 rounded-full text-xs font-medium ${getSourceBadgeClass(
+                                class={`px-2 py-0.5 text-xs font-medium ${getSourceBadgeClass(
                                   book.source
                                 )}`}
                               >
@@ -151,7 +151,7 @@ const LoadBookModal: Component<LoadBookModalProps> = (props) => {
 
             <Show when={bookStore.loading()}>
               <div class="text-center py-8">
-                <div class="animate-spin rounded-full h-8 w-8 border-b border-blue-600 mx-auto mb-4"></div>
+                <div class="animate-spin rounded-full h-8 w-8 border-b border-gray-600 mx-auto mb-4"></div>
                 <p class="text-gray-500">Loading books...</p>
               </div>
             </Show>
@@ -164,7 +164,7 @@ const LoadBookModal: Component<LoadBookModalProps> = (props) => {
             </div>
             <button
               onClick={props.onClose}
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 hover:text-gray-800 hover:border-gray-400 transition-colors"
             >
               Cancel
             </button>
