@@ -1,7 +1,8 @@
 import type { Component } from "solid-js";
-import { Show, createSignal } from "solid-js";
+import { Show, createSignal, createEffect, onCleanup } from "solid-js";
 import { bookStore } from "@stores/bookStore";
 import { settingsStore } from "@stores/settingsStore";
+import { uiStore } from "@stores/uiStore";
 import SyncStatusComponent from "../SyncStatus";
 import { googleAuth } from "../../services/googleAuth";
 import BookManagementModal from "../Book/BookManagementModal";
@@ -14,6 +15,45 @@ const TopToolbar: Component = () => {
   const [syncSuccess, setSyncSuccess] = createSignal<string | null>(null);
   const [syncing, setSyncing] = createSignal(false);
   const [saving, setSaving] = createSignal(false);
+
+  // Keyboard shortcuts for UI controls
+  createEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle shortcuts when a book is selected and not in input fields
+      if (
+        !bookStore.selectedBook() ||
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+
+      if (isCtrlOrCmd && e.shiftKey) {
+        switch (e.key.toLowerCase()) {
+          case "z":
+            e.preventDefault();
+            uiStore.toggleZenMode();
+            break;
+          case "c":
+            e.preventDefault();
+            uiStore.toggleChapters();
+            break;
+          case "i":
+            e.preventDefault();
+            uiStore.toggleIdeas();
+            break;
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    onCleanup(() => {
+      document.removeEventListener("keydown", handleKeyDown);
+    });
+  });
 
   const handleSave = async () => {
     const chapter = chapterStore.selectedChapter();
@@ -214,6 +254,89 @@ const TopToolbar: Component = () => {
 
           {/* Right side - Controls */}
           <div class="flex items-center space-x-2">
+            {/* Panel Toggles - Only show when a book is selected */}
+            <Show when={bookStore.selectedBook()}>
+              {/* Zen Mode Toggle */}
+              <button
+                onClick={() => uiStore.toggleZenMode()}
+                class={`p-1.5 rounded-md transition-all duration-200 ${
+                  uiStore.isZenMode()
+                    ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                    : "hover:bg-gray-100 text-gray-600 hover:text-gray-800"
+                }`}
+                title={
+                  uiStore.isZenMode()
+                    ? "Exit Zen Mode (Ctrl+Shift+Z)"
+                    : "Enter Zen Mode (Ctrl+Shift+Z)"
+                }
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
+                </svg>
+              </button>
+
+              {/* Chapters Panel Toggle */}
+              <button
+                onClick={() => uiStore.toggleChapters()}
+                class={`p-1.5 rounded-md transition-all duration-200 ${
+                  uiStore.showChapters()
+                    ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                    : "hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                }`}
+                title={
+                  uiStore.showChapters()
+                    ? "Hide Chapters Panel (Ctrl+Shift+C)"
+                    : "Show Chapters Panel (Ctrl+Shift+C)"
+                }
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+              </button>
+
+              {/* Ideas Panel Toggle */}
+              <button
+                onClick={() => uiStore.toggleIdeas()}
+                class={`p-1.5 rounded-md transition-all duration-200 ${
+                  uiStore.showIdeas()
+                    ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                    : "hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                }`}
+                title={
+                  uiStore.showIdeas()
+                    ? "Hide Ideas Panel (Ctrl+Shift+I)"
+                    : "Show Ideas Panel (Ctrl+Shift+I)"
+                }
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
+              </button>
+
+              <div class="w-px h-4 bg-gray-300"></div>
+            </Show>
+
             {/* Autosave Status and Save Button - Only show when a book is selected */}
             <Show when={bookStore.selectedBook()}>
               <Show when={settingsStore.settings.autoSave}>

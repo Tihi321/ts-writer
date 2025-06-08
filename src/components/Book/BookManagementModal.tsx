@@ -132,6 +132,8 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
     try {
       await bookService.syncBookWithCloud(book.id, direction);
       await loadBooks();
+      // Also refresh the main book store so the book view shows correct sync status
+      await bookStore.refetchBooks();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to sync book");
     }
@@ -141,6 +143,8 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
     try {
       await bookService.importCloudBook(cloudBook.id);
       await loadBooks();
+      // Also refresh the main book store so the book view shows the imported book
+      await bookStore.refetchBooks();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to import book");
     }
