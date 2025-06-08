@@ -3,10 +3,10 @@ import { dataService } from "./dataService";
 import { v4 as uuidv4 } from "uuid";
 
 export const ideaService = {
-  // Get all ideas for a chapter
-  async getIdeasForChapter(bookName: string, chapterId: string): Promise<Idea[]> {
+  // Get all ideas for a chapter (supports both ID and name)
+  async getIdeasForChapter(bookIdOrName: string, chapterId: string): Promise<Idea[]> {
     try {
-      const config = await dataService.getBookConfig(bookName);
+      const config = await dataService.getBookConfig(bookIdOrName);
       if (!config) return [];
 
       if (!config.chapters.find((ch) => ch.id === chapterId)) {
@@ -16,16 +16,16 @@ export const ideaService = {
       const ideas = config.ideas[chapterId] || [];
       return ideas.sort((a, b) => a.order - b.order);
     } catch (error) {
-      console.error(`Error fetching ideas for chapter ${chapterId} in ${bookName}:`, error);
+      console.error(`Error fetching ideas for chapter ${chapterId} in ${bookIdOrName}:`, error);
       throw error;
     }
   },
 
-  // Create a new idea
-  async createIdea(bookName: string, chapterId: string, text: string): Promise<Idea> {
+  // Create a new idea (supports both ID and name)
+  async createIdea(bookIdOrName: string, chapterId: string, text: string): Promise<Idea> {
     try {
-      const config = await dataService.getBookConfig(bookName);
-      if (!config) throw new Error(`Book ${bookName} not found`);
+      const config = await dataService.getBookConfig(bookIdOrName);
+      if (!config) throw new Error(`Book ${bookIdOrName} not found`);
 
       if (!config.chapters.find((ch) => ch.id === chapterId)) {
         throw new Error(`Chapter ${chapterId} not found`);
@@ -39,25 +39,25 @@ export const ideaService = {
       };
 
       config.ideas[chapterId] = [...chapterIdeas, newIdea];
-      await dataService.saveBookConfig(bookName, config);
+      await dataService.saveBookConfig(bookIdOrName, config);
 
       return newIdea;
     } catch (error) {
-      console.error(`Error creating idea for chapter ${chapterId} in ${bookName}:`, error);
+      console.error(`Error creating idea for chapter ${chapterId} in ${bookIdOrName}:`, error);
       throw error;
     }
   },
 
-  // Update an idea
+  // Update an idea (supports both ID and name)
   async updateIdea(
-    bookName: string,
+    bookIdOrName: string,
     chapterId: string,
     ideaId: string,
     updates: { text?: string; order?: number }
   ): Promise<Idea> {
     try {
-      const config = await dataService.getBookConfig(bookName);
-      if (!config) throw new Error(`Book ${bookName} not found`);
+      const config = await dataService.getBookConfig(bookIdOrName);
+      if (!config) throw new Error(`Book ${bookIdOrName} not found`);
 
       if (!config.chapters.find((ch) => ch.id === chapterId)) {
         throw new Error(`Chapter ${chapterId} not found`);
@@ -78,23 +78,23 @@ export const ideaService = {
         chapterIdeas.sort((a, b) => a.order - b.order);
       }
 
-      await dataService.saveBookConfig(bookName, config);
+      await dataService.saveBookConfig(bookIdOrName, config);
       return ideaToUpdate;
     } catch (error) {
-      console.error(`Error updating idea ${ideaId} in ${bookName}:`, error);
+      console.error(`Error updating idea ${ideaId} in ${bookIdOrName}:`, error);
       throw error;
     }
   },
 
-  // Delete an idea
+  // Delete an idea (supports both ID and name)
   async deleteIdea(
-    bookName: string,
+    bookIdOrName: string,
     chapterId: string,
     ideaId: string
   ): Promise<{ message: string }> {
     try {
-      const config = await dataService.getBookConfig(bookName);
-      if (!config) throw new Error(`Book ${bookName} not found`);
+      const config = await dataService.getBookConfig(bookIdOrName);
+      if (!config) throw new Error(`Book ${bookIdOrName} not found`);
 
       if (!config.chapters.find((ch) => ch.id === chapterId)) {
         throw new Error(`Chapter ${chapterId} not found`);
@@ -111,23 +111,23 @@ export const ideaService = {
       // Re-normalize the order of remaining ideas
       config.ideas[chapterId].forEach((idea, index) => (idea.order = index));
 
-      await dataService.saveBookConfig(bookName, config);
+      await dataService.saveBookConfig(bookIdOrName, config);
       return { message: "Idea deleted successfully" };
     } catch (error) {
-      console.error(`Error deleting idea ${ideaId} in ${bookName}:`, error);
+      console.error(`Error deleting idea ${ideaId} in ${bookIdOrName}:`, error);
       throw error;
     }
   },
 
-  // Reorder ideas
+  // Reorder ideas (supports both ID and name)
   async reorderIdeas(
-    bookName: string,
+    bookIdOrName: string,
     chapterId: string,
     ideaOrder: string[]
   ): Promise<{ message: string; ideas: Idea[] }> {
     try {
-      const config = await dataService.getBookConfig(bookName);
-      if (!config) throw new Error(`Book ${bookName} not found`);
+      const config = await dataService.getBookConfig(bookIdOrName);
+      if (!config) throw new Error(`Book ${bookIdOrName} not found`);
 
       const chapterIdeas = config.ideas[chapterId] || [];
       const existingIds = new Set(chapterIdeas.map((i) => i.id));
@@ -142,13 +142,13 @@ export const ideaService = {
         return { ...idea, order: index };
       });
 
-      await dataService.saveBookConfig(bookName, config);
+      await dataService.saveBookConfig(bookIdOrName, config);
       return {
         message: "Ideas reordered successfully",
         ideas: config.ideas[chapterId],
       };
     } catch (error) {
-      console.error(`Error reordering ideas in ${bookName}:`, error);
+      console.error(`Error reordering ideas in ${bookIdOrName}:`, error);
       throw error;
     }
   },

@@ -1,12 +1,14 @@
 import { Chapter, ChapterWithContent } from "../stores/types";
 import { dataService } from "./dataService";
+import { bookManagerService } from "./bookManager";
 import { v4 as uuidv4 } from "uuid";
+import { indexedDBService } from "./indexedDB";
 
 export const chapterService = {
-  // Get all chapters for a book
-  async getAllChapters(bookName: string): Promise<Chapter[]> {
+  // Get all chapters for a book (supports both ID and name)
+  async getAllChapters(bookIdOrName: string): Promise<Chapter[]> {
     try {
-      const config = await dataService.getBookConfig(bookName);
+      const config = await dataService.getBookConfig(bookIdOrName);
       if (!config) return [];
 
       // Return chapters in the correct order
@@ -16,37 +18,48 @@ export const chapterService = {
 
       return sortedChapters;
     } catch (error) {
-      console.error(`Error fetching chapters for ${bookName}:`, error);
+      console.error(`Error fetching chapters for ${bookIdOrName}:`, error);
       throw error;
     }
   },
 
-  // Get a specific chapter with content
-  async getChapterById(bookName: string, id: string): Promise<ChapterWithContent> {
+  // Get a specific chapter with content (supports both ID and name)
+  async getChapterById(bookIdOrName: string, id: string): Promise<ChapterWithContent> {
     try {
-      const config = await dataService.getBookConfig(bookName);
-      if (!config) throw new Error(`Book ${bookName} not found`);
+      const config = await dataService.getBookConfig(bookIdOrName);
+      if (!config) throw new Error(`Book ${bookIdOrName} not found`);
 
       const chapter = config.chapters.find((ch) => ch.id === id);
       if (!chapter) throw new Error(`Chapter ${id} not found`);
 
-      const content = await dataService.getChapterContent(bookName, chapter.fileName);
+      const content = await dataService.getChapterContent(bookIdOrName, chapter.fileName);
 
       return {
         ...chapter,
         content: content || "",
       };
     } catch (error) {
-      console.error(`Error fetching chapter ${id} for ${bookName}:`, error);
+      console.error(`Error fetching chapter ${id} for ${bookIdOrName}:`, error);
       throw error;
     }
   },
 
-  // Create a new chapter
-  async createChapter(bookName: string, title: string): Promise<Chapter> {
+  // Create a new chapter (supports both ID and name)
+  async createChapter(bookIdOrName: string, title: string): Promise<Chapter> {
     try {
-      const config = await dataService.getBookConfig(bookName);
-      if (!config) throw new Error(`Book ${bookName} not found`);
+      // Get book by ID first, then by name for backward compatibility
+      let book = await bookManagerService.getBook(bookIdOrName);
+
+      if (!book) {
+        book = await bookManagerService.getBookByName(bookIdOrName);
+      }
+
+      if (!book) {
+        throw new Error(`Book ${bookIdOrName} not found`);
+      }
+
+      const config = await dataService.getBookConfig(book.id);
+      if (!config) throw new Error(`Book config not found for ${book.name} (ID: ${book.id})`);
 
       const newChapterId = uuidv4();
       const fileName = `${title.toLowerCase().replace(/\s+/g, "-")}-${newChapterId.slice(0, 8)}.md`;
@@ -57,32 +70,32 @@ export const chapterService = {
         fileName,
       };
 
-      // Save initial chapter content
-      await dataService.saveChapterContent(bookName, fileName, `# ${title}\n\nStart writing...`);
+      // Save initial chapter content using book ID
+      await dataService.saveChapterContent(book.id, fileName, `# ${title}\n\nStart writing...`);
 
       // Update book config
       config.chapters.push(newChapter);
       config.chapterOrder.push(newChapterId);
       config.ideas[newChapterId] = [];
 
-      await dataService.saveBookConfig(bookName, config);
+      await dataService.saveBookConfig(book.id, config);
 
       return newChapter;
     } catch (error) {
-      console.error(`Error creating chapter in ${bookName}:`, error);
+      console.error(`Error creating chapter in ${bookIdOrName}:`, error);
       throw error;
     }
   },
 
-  // Update a chapter
+  // Update a chapter (supports both ID and name)
   async updateChapter(
-    bookName: string,
+    bookIdOrName: string,
     id: string,
     updates: { title?: string; content?: string }
   ): Promise<ChapterWithContent> {
     try {
-      const config = await dataService.getBookConfig(bookName);
-      if (!config) throw new Error(`Book ${bookName} not found`);
+      const config = await dataService.getBookConfig(bookIdOrName);
+      if (!config) throw new Error(`Book ${bookIdOrName} not found`);
 
       const chapterIndex = config.chapters.findIndex((ch) => ch.id === id);
       if (chapterIndex === -1) throw new Error(`Chapter ${id} not found`);
@@ -98,32 +111,32 @@ export const chapterService = {
 
       // Update content if provided
       if (typeof updates.content === "string") {
-        await dataService.saveChapterContent(bookName, chapter.fileName, updates.content);
+        await dataService.saveChapterContent(bookIdOrName, chapter.fileName, updates.content);
       }
 
       // Save config if title changed
       if (configChanged) {
-        await dataService.saveBookConfig(bookName, config);
+        await dataService.saveBookConfig(bookIdOrName, config);
       }
 
       // Get updated content
-      const content = await dataService.getChapterContent(bookName, chapter.fileName);
+      const content = await dataService.getChapterContent(bookIdOrName, chapter.fileName);
 
       return {
         ...chapter,
         content: content || "",
       };
     } catch (error) {
-      console.error(`Error updating chapter ${id} in ${bookName}:`, error);
+      console.error(`Error updating chapter ${id} in ${bookIdOrName}:`, error);
       throw error;
     }
   },
 
-  // Delete a chapter
-  async deleteChapter(bookName: string, id: string): Promise<{ message: string }> {
+  // Delete a chapter (supports both ID and name)
+  async deleteChapter(bookIdOrName: string, id: string): Promise<{ message: string }> {
     try {
-      const config = await dataService.getBookConfig(bookName);
-      if (!config) throw new Error(`Book ${bookName} not found`);
+      const config = await dataService.getBookConfig(bookIdOrName);
+      if (!config) throw new Error(`Book ${bookIdOrName} not found`);
 
       const chapterIndex = config.chapters.findIndex((ch) => ch.id === id);
       if (chapterIndex === -1) throw new Error(`Chapter ${id} not found`);
@@ -131,30 +144,30 @@ export const chapterService = {
       const chapter = config.chapters[chapterIndex];
 
       // Delete chapter file
-      await dataService.deleteChapterContent(bookName, chapter.fileName);
+      await dataService.deleteChapterContent(bookIdOrName, chapter.fileName);
 
       // Remove from config
       config.chapters.splice(chapterIndex, 1);
       config.chapterOrder = config.chapterOrder.filter((chId) => chId !== id);
       delete config.ideas[id];
 
-      await dataService.saveBookConfig(bookName, config);
+      await dataService.saveBookConfig(bookIdOrName, config);
 
       return { message: "Chapter deleted successfully" };
     } catch (error) {
-      console.error(`Error deleting chapter ${id} in ${bookName}:`, error);
+      console.error(`Error deleting chapter ${id} in ${bookIdOrName}:`, error);
       throw error;
     }
   },
 
-  // Reorder chapters
+  // Reorder chapters (supports both ID and name)
   async reorderChapters(
-    bookName: string,
+    bookIdOrName: string,
     chapterOrder: string[]
   ): Promise<{ message: string; chapterOrder: string[]; chapters: Chapter[] }> {
     try {
-      const config = await dataService.getBookConfig(bookName);
-      if (!config) throw new Error(`Book ${bookName} not found`);
+      const config = await dataService.getBookConfig(bookIdOrName);
+      if (!config) throw new Error(`Book ${bookIdOrName} not found`);
 
       const existingIds = new Set(config.chapters.map((c) => c.id));
 
@@ -166,7 +179,7 @@ export const chapterService = {
       }
 
       config.chapterOrder = chapterOrder;
-      await dataService.saveBookConfig(bookName, config);
+      await dataService.saveBookConfig(bookIdOrName, config);
 
       // Return the reordered chapters
       const sortedChapters = config.chapterOrder
@@ -179,7 +192,7 @@ export const chapterService = {
         chapters: sortedChapters,
       };
     } catch (error) {
-      console.error(`Error reordering chapters in ${bookName}:`, error);
+      console.error(`Error reordering chapters in ${bookIdOrName}:`, error);
       throw error;
     }
   },

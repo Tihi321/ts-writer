@@ -1,4 +1,5 @@
-import { indexedDBService, BookConfig, Chapter, Idea } from "./indexedDB";
+import { bookManagerService } from "./bookManager";
+import { indexedDBService, BookConfig, Chapter, Idea, BookEntry } from "./indexedDB";
 import { googleDriveService } from "./googleDrive";
 import { googleAuth } from "./googleAuth";
 import { settingsStore } from "../stores/settingsStore";
@@ -12,8 +13,8 @@ class DataService {
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    // Always initialize IndexedDB first (works offline)
-    await indexedDBService.initialize();
+    // Always initialize IndexedDB and BookManager first (works offline)
+    await bookManagerService.initialize();
 
     // Try to initialize Google Auth if sync is enabled or auto sign-in is enabled
     if (settingsStore.settings.googleSyncEnabled || settingsStore.settings.autoSignIn) {
@@ -45,87 +46,95 @@ class DataService {
     this.isInitialized = true;
   }
 
-  // Book operations
+  // Enhanced book operations using book manager
   async listBooks(): Promise<string[]> {
     await this.initialize();
-    return await indexedDBService.listBooks();
+    const books = await bookManagerService.listBooks();
+    return books.map((book) => book.name);
+  }
+
+  async listBooksWithInfo() {
+    await this.initialize();
+    return await bookManagerService.listBooks();
   }
 
   async createBook(bookName: string): Promise<void> {
     await this.initialize();
-    await indexedDBService.createBook(bookName);
+    await bookManagerService.createLocalBook(bookName);
 
-    // Sync to cloud if sync is enabled and online
-    if (settingsStore.settings.googleSyncEnabled && googleAuth.signedIn) {
-      this.syncToCloud().catch(console.error);
-    }
+    // Manual sync only - no automatic syncing
   }
 
-  async getBookConfig(bookName: string): Promise<BookConfig | null> {
+  async createBookWithId(bookName: string): Promise<string> {
     await this.initialize();
-    return await indexedDBService.getBookConfig(bookName);
+    const bookId = await bookManagerService.createLocalBook(bookName);
+
+    // Manual sync only - no automatic syncing
+
+    return bookId;
   }
 
-  async saveBookConfig(bookName: string, config: BookConfig): Promise<void> {
+  async getBookConfig(bookId: string): Promise<BookConfig | null> {
     await this.initialize();
-    await indexedDBService.saveBookConfig(bookName, config);
-
-    // Sync to cloud if sync is enabled, auto-sync is enabled, and online
-    if (
-      settingsStore.settings.googleSyncEnabled &&
-      settingsStore.settings.autoSyncEnabled &&
-      googleAuth.signedIn
-    ) {
-      this.syncToCloud().catch(console.error);
-    }
+    const book = await bookManagerService.getBook(bookId);
+    return book?.config || null;
   }
 
-  async deleteBook(bookName: string): Promise<void> {
+  async getBookById(bookId: string): Promise<BookEntry | null> {
     await this.initialize();
-    await indexedDBService.deleteBook(bookName);
+    return await bookManagerService.getBook(bookId);
+  }
 
-    // Sync to cloud if sync is enabled and online
-    if (settingsStore.settings.googleSyncEnabled && googleAuth.signedIn) {
-      this.syncToCloud().catch(console.error);
+  async saveBookConfig(bookId: string, config: BookConfig): Promise<void> {
+    await this.initialize();
+    const book = await bookManagerService.getBook(bookId);
+    if (!book) {
+      throw new Error(`Book with ID ${bookId} not found`);
     }
+    await bookManagerService.updateBookConfig(book.id, config);
+  }
+
+  async deleteBook(bookId: string): Promise<void> {
+    await this.initialize();
+    const book = await bookManagerService.getBook(bookId);
+    if (!book) {
+      throw new Error(`Book with ID ${bookId} not found`);
+    }
+    await bookManagerService.deleteBook(book.id, "local");
   }
 
   // Chapter operations
-  async getChapterContent(bookName: string, fileName: string): Promise<string | null> {
+  async getChapterContent(bookId: string, fileName: string): Promise<string | null> {
     await this.initialize();
-    return await indexedDBService.getChapterContent(bookName, fileName);
+    const book = await bookManagerService.getBook(bookId);
+    if (!book) return null;
+    return await bookManagerService.getChapterContent(book.id, fileName);
   }
 
-  async saveChapterContent(bookName: string, fileName: string, content: string): Promise<void> {
+  async saveChapterContent(bookId: string, fileName: string, content: string): Promise<void> {
     await this.initialize();
-    await indexedDBService.saveChapterContent(bookName, fileName, content);
-
-    // Sync to cloud if sync is enabled, auto-sync is enabled, and online
-    if (
-      settingsStore.settings.googleSyncEnabled &&
-      settingsStore.settings.autoSyncEnabled &&
-      googleAuth.signedIn
-    ) {
-      this.syncToCloud().catch(console.error);
+    const book = await bookManagerService.getBook(bookId);
+    if (!book) {
+      throw new Error(`Book with ID ${bookId} not found`);
     }
+    await bookManagerService.saveChapterContent(book.id, fileName, content);
   }
 
-  async deleteChapterContent(bookName: string, fileName: string): Promise<void> {
+  async deleteChapterContent(bookId: string, fileName: string): Promise<void> {
     await this.initialize();
-    await indexedDBService.deleteChapterContent(bookName, fileName);
-
-    // Sync to cloud if sync is enabled and online
-    if (settingsStore.settings.googleSyncEnabled && googleAuth.signedIn) {
-      this.syncToCloud().catch(console.error);
-    }
+    const book = await bookManagerService.getBook(bookId);
+    if (!book) return;
+    await bookManagerService.deleteChapterContent(book.id, fileName);
   }
 
-  async listChapterFiles(bookName: string): Promise<string[]> {
+  async listChapterFiles(bookId: string): Promise<string[]> {
     await this.initialize();
-    return await indexedDBService.listChapterFiles(bookName);
+    const book = await bookManagerService.getBook(bookId);
+    if (!book) return [];
+    return await bookManagerService.listChapterFiles(book.id);
   }
 
-  // Sync operations
+  // Enhanced sync operations
   async syncToCloud(): Promise<void> {
     if (!settingsStore.settings.googleSyncEnabled || !googleAuth.signedIn || this.syncInProgress)
       return;
@@ -138,23 +147,21 @@ class DataService {
     try {
       this.syncInProgress = true;
 
-      const pendingChanges = await indexedDBService.getPendingChanges();
+      // Get all out-of-sync books and sync them
+      const outOfSyncBooks = await bookManagerService.listOutOfSyncBooks();
 
-      // Sync pending books
-      for (const bookName of pendingChanges.books) {
-        const config = await indexedDBService.getBookConfig(bookName);
-        if (config) {
-          await googleDriveService.saveBookConfig(bookName, config);
-          await indexedDBService.markAsSynced("book", bookName);
-        }
-      }
-
-      // Sync pending chapters
-      for (const { bookName, fileName } of pendingChanges.chapters) {
-        const content = await indexedDBService.getChapterContent(bookName, fileName);
-        if (content !== null) {
-          await googleDriveService.saveChapterContent(bookName, fileName, content);
-          await indexedDBService.markAsSynced("chapter", `${bookName}:${fileName}`);
+      for (const book of outOfSyncBooks) {
+        try {
+          if (book.source === "local") {
+            // Export local books to cloud
+            await bookManagerService.exportBookToCloud(book.id);
+          } else {
+            // Push changes for cloud/imported books
+            await bookManagerService.syncBookWithCloud(book.id, "push");
+          }
+        } catch (error) {
+          console.error(`Failed to sync book ${book.name}:`, error);
+          // Continue with other books
         }
       }
     } catch (error) {
@@ -173,36 +180,29 @@ class DataService {
     try {
       this.syncInProgress = true;
 
-      // Get books from Google Drive
-      const cloudBooks = await googleDriveService.listBooks();
+      // Get available cloud books
+      const availableCloudBooks = await bookManagerService.getAvailableCloudBooks();
 
-      for (const bookName of cloudBooks) {
-        // Sync book config
-        const cloudConfig = await googleDriveService.getBookConfig(bookName);
-        if (cloudConfig) {
-          const localConfig = await indexedDBService.getBookConfig(bookName);
-
-          // Simple conflict resolution: cloud wins for now
-          // TODO: Implement proper conflict resolution
-          if (!localConfig || JSON.stringify(localConfig) !== JSON.stringify(cloudConfig)) {
-            await indexedDBService.saveBookConfig(bookName, cloudConfig);
-            await indexedDBService.markAsSynced("book", bookName);
+      // Import new books that aren't locally available
+      for (const cloudBook of availableCloudBooks) {
+        if (cloudBook.available) {
+          try {
+            await bookManagerService.importCloudBook(cloudBook.id);
+          } catch (error) {
+            console.error(`Failed to import cloud book ${cloudBook.name}:`, error);
           }
         }
+      }
 
-        // Sync chapter files
-        const cloudChapterFiles = await googleDriveService.listChapterFiles(bookName);
-
-        for (const fileName of cloudChapterFiles) {
-          const cloudContent = await googleDriveService.getChapterContent(bookName, fileName);
-          if (cloudContent !== null) {
-            const localContent = await indexedDBService.getChapterContent(bookName, fileName);
-
-            // Simple conflict resolution: cloud wins for now
-            if (localContent !== cloudContent) {
-              await indexedDBService.saveChapterContent(bookName, fileName, cloudContent);
-              await indexedDBService.markAsSynced("chapter", `${bookName}:${fileName}`);
-            }
+      // Sync existing cloud/imported books
+      const cloudBooks = await bookManagerService.listCloudBooks();
+      for (const book of cloudBooks) {
+        if (book.syncStatus === "out_of_sync") {
+          try {
+            // For now, cloud wins in conflicts (can be enhanced later)
+            await bookManagerService.syncBookWithCloud(book.id, "pull");
+          } catch (error) {
+            console.error(`Failed to sync book ${book.name} from cloud:`, error);
           }
         }
       }
@@ -214,50 +214,67 @@ class DataService {
     }
   }
 
+  // Enhanced sync status and operations
   async getSyncStatus(): Promise<SyncStatus> {
-    if (!settingsStore.settings.googleSyncEnabled || !googleAuth.signedIn) return "offline";
-    if (this.syncInProgress) return "pending";
+    if (!settingsStore.settings.googleSyncEnabled) {
+      return "manual";
+    }
+
+    if (!googleAuth.signedIn) {
+      return "offline";
+    }
+
+    if (this.syncInProgress) {
+      return "pending";
+    }
 
     try {
-      const pendingChanges = await indexedDBService.getPendingChanges();
-      const hasPendingChanges =
-        pendingChanges.books.length > 0 || pendingChanges.chapters.length > 0;
-
-      // If there are pending changes but auto-sync is disabled, show as manual
-      // to indicate that manual sync is needed
-      if (hasPendingChanges && !settingsStore.settings.autoSyncEnabled) {
-        return "manual";
+      const canConnect = await bookManagerService.checkCloudConnection();
+      if (!canConnect) {
+        return "error";
       }
 
-      return hasPendingChanges ? "pending" : "synced";
+      const outOfSyncBooks = await bookManagerService.listOutOfSyncBooks();
+      return outOfSyncBooks.length > 0 ? "pending" : "synced";
     } catch (error) {
-      console.error("Error getting sync status:", error);
       return "error";
     }
   }
 
-  async forceSyncFromCloud(): Promise<void> {
-    await this.syncFromCloud();
-  }
-
-  async forceSyncToCloud(): Promise<void> {
-    await this.syncToCloud();
-  }
-
-  // Reset sync state in case it gets stuck
   resetSyncState(): void {
     this.syncInProgress = false;
   }
 
-  // Check if sync is currently in progress
   isSyncInProgress(): boolean {
     return this.syncInProgress;
   }
 
-  // Event handling for real-time sync (replaces WebSocket)
-  onAuthStateChange(callback: (signedIn: boolean) => void): void {
-    // This would be implemented with a proper event system
-    // For now, components can check googleAuth.signedIn reactively
+  // Note: Auth state changes can be monitored through googleAuth.signedIn reactive signal
+
+  // New enhanced methods
+  async getBookStats() {
+    await this.initialize();
+    return await bookManagerService.getBookStats();
+  }
+
+  async syncAllOutOfSyncBooks() {
+    await this.initialize();
+    return await bookManagerService.syncAllOutOfSyncBooks();
+  }
+
+  async exportBookToCloud(bookId: string) {
+    await this.initialize();
+    return await bookManagerService.exportBookToCloud(bookId);
+  }
+
+  async importCloudBook(cloudBookId: string) {
+    await this.initialize();
+    return await bookManagerService.importCloudBook(cloudBookId);
+  }
+
+  async getAvailableCloudBooks() {
+    await this.initialize();
+    return await bookManagerService.getAvailableCloudBooks();
   }
 }
 

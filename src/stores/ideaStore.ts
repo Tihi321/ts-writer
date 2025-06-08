@@ -16,7 +16,7 @@ createEffect(async () => {
   if (book && chapter) {
     setLoading(true);
     try {
-      const ideaList = await ideaService.getIdeasForChapter(book, chapter.id);
+      const ideaList = await ideaService.getIdeasForChapter(book.id, chapter.id);
       setIdeas(ideaList);
     } catch (err) {
       setError("Failed to load ideas.");
@@ -36,7 +36,7 @@ const createNewIdea = async (text: string) => {
   if (!book || !chapter) return;
 
   try {
-    const newIdea = await ideaService.createIdea(book, chapter.id, text);
+    const newIdea = await ideaService.createIdea(book.id, chapter.id, text);
     setIdeas([...ideas(), newIdea]);
     return newIdea;
   } catch (err) {
@@ -51,7 +51,7 @@ const updateIdea = async (ideaId: string, text: string) => {
   if (!book || !chapter) return;
 
   try {
-    const updatedIdea = await ideaService.updateIdea(book, chapter.id, ideaId, { text });
+    const updatedIdea = await ideaService.updateIdea(book.id, chapter.id, ideaId, { text });
 
     // Update the idea in the list
     const currentIdeas = ideas();
@@ -75,7 +75,7 @@ const deleteIdea = async (ideaId: string) => {
   if (!book || !chapter) return;
 
   try {
-    await ideaService.deleteIdea(book, chapter.id, ideaId);
+    await ideaService.deleteIdea(book.id, chapter.id, ideaId);
 
     // Remove idea from the list
     const currentIdeas = ideas();
@@ -93,7 +93,7 @@ const reorderIdeas = async (newOrder: string[]) => {
   if (!book || !chapter) return;
 
   try {
-    const result = await ideaService.reorderIdeas(book, chapter.id, newOrder);
+    const result = await ideaService.reorderIdeas(book.id, chapter.id, newOrder);
     setIdeas(result.ideas);
   } catch (err) {
     setError("Failed to reorder ideas.");

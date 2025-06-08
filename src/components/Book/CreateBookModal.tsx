@@ -1,6 +1,5 @@
 import { Component, createSignal, Show } from "solid-js";
-import { bookStore } from "@stores/bookStore";
-import { bookService } from "@services/bookService";
+import { bookStore } from "../../stores/bookStore";
 
 interface CreateBookModalProps {
   isOpen: boolean;
@@ -20,15 +19,16 @@ const CreateBookModal: Component<CreateBookModalProps> = (props) => {
       setError(null);
 
       const bookName = newBookName().trim();
-      await bookService.createBook(bookName);
+      const bookId = await bookStore.createBook(bookName);
 
       // Reset form and close modal
       setNewBookName("");
       props.onClose();
 
-      // Refresh books list and select the new book
-      await bookStore.refetchBooks();
-      bookStore.selectBook(bookName);
+      // The bookStore.createBook already handles:
+      // - Creating the book
+      // - Refreshing the books list
+      // - Auto-selecting the new book
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create book");
     } finally {
@@ -78,6 +78,9 @@ const CreateBookModal: Component<CreateBookModalProps> = (props) => {
                   onKeyPress={(e) => e.key === "Enter" && handleCreateBook()}
                   autofocus
                 />
+                <p class="text-xs text-gray-500 mt-1">
+                  This will create a new local book. You can sync it to cloud later.
+                </p>
               </div>
 
               <Show when={error()}>
@@ -107,7 +110,7 @@ const CreateBookModal: Component<CreateBookModalProps> = (props) => {
                   <span>Creating...</span>
                 </div>
               ) : (
-                "Create Book"
+                "Create Local Book"
               )}
             </button>
           </div>

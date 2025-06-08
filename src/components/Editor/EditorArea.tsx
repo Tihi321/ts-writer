@@ -2,10 +2,7 @@ import { Component, createEffect, createSignal, Show, createMemo } from "solid-j
 import { chapterStore } from "../../stores/chapterStore";
 import { Chapter } from "../../stores/types";
 import { marked } from "marked";
-import { uiStore } from "../../stores/uiStore";
 import { settingsStore } from "../../stores/settingsStore";
-import { googleAuth } from "../../services/googleAuth";
-import { dataService } from "../../services/dataService";
 
 // Optional: Add Tailwind's typography plugin for better preview styling
 // npm install -D @tailwindcss/typography
@@ -15,7 +12,7 @@ import { dataService } from "../../services/dataService";
 const EditorArea: Component = () => {
   const [currentContent, setCurrentContent] = createSignal("");
   const [isSaving, setIsSaving] = createSignal(false);
-  const [isSyncing, setIsSyncing] = createSignal(false);
+
   const [mode, setMode] = createSignal<"write" | "code">("write");
   let textareaRef: HTMLTextAreaElement | undefined;
   let editableRef: HTMLDivElement | undefined;
@@ -30,6 +27,19 @@ const EditorArea: Component = () => {
     }
   });
 
+  // Listen for save events from the toolbar
+  createEffect(() => {
+    const handleSaveEvent = () => {
+      handleSave();
+    };
+
+    window.addEventListener("triggerSave", handleSaveEvent);
+
+    return () => {
+      window.removeEventListener("triggerSave", handleSaveEvent);
+    };
+  });
+
   // Save functionality
   const handleSave = async () => {
     const chapter = chapterStore.selectedChapter();
@@ -37,9 +47,9 @@ const EditorArea: Component = () => {
 
     setIsSaving(true);
     try {
-      await chapterStore.updateChapter(chapter.id, currentContent());
+      await chapterStore.updateChapter(chapter.id, { content: currentContent() });
       // Show success message for manual saves
-      if (!uiStore.autoSaveEnabled()) {
+      if (!settingsStore.settings.autoSave) {
         alert("Chapter saved successfully!");
       }
     } catch (error) {
@@ -52,31 +62,8 @@ const EditorArea: Component = () => {
 
   // Autosave functionality - only triggers if autosave is enabled
   const handleAutoSave = async () => {
-    if (!uiStore.autoSaveEnabled()) return;
+    if (!settingsStore.settings.autoSave) return;
     await handleSave();
-  };
-
-  // Manual sync functionality
-  const handleSync = async () => {
-    if (!settingsStore.settings.googleSyncEnabled || !googleAuth.signedIn || isSyncing()) return;
-
-    setIsSyncing(true);
-    try {
-      // First save current content
-      await handleSave();
-
-      // Then sync with cloud
-      await dataService.forceSyncToCloud();
-      await dataService.forceSyncFromCloud();
-
-      // Show success message
-      alert("Sync completed successfully!");
-    } catch (error) {
-      console.error("Failed to sync:", error);
-      alert("Failed to sync with Google Drive. Please try again.");
-    } finally {
-      setIsSyncing(false);
-    }
   };
 
   const toggleFormat = (wrapChar: string) => {
@@ -865,55 +852,6 @@ const EditorArea: Component = () => {
                 outline: "none",
               }}
             />
-          </Show>
-        </div>
-
-        {/* Save Button and Status */}
-        <div class="border-t border-gray-200 bg-gray-50">
-          <Show when={isSaving()}>
-            <div class="p-2 bg-blue-50 border-b border-blue-200 flex justify-center">
-              <span class="text-xs text-blue-600 font-medium">💾 Saving...</span>
-            </div>
-          </Show>
-
-          <Show when={!uiStore.autoSaveEnabled()}>
-            <div class="p-4 flex justify-end space-x-3">
-              {/* Sync Button - Only show if Google sync is enabled */}
-              <Show when={settingsStore.settings.googleSyncEnabled && googleAuth.signedIn}>
-                <button
-                  onClick={handleSync}
-                  disabled={isSyncing() || isSaving()}
-                  class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm"
-                >
-                  {isSyncing() ? "🔄 Syncing..." : "🔄 Sync"}
-                </button>
-              </Show>
-
-              <button
-                onClick={handleSave}
-                disabled={isSaving()}
-                class="bg-gray-900 hover:bg-gray-800 disabled:bg-gray-400 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm"
-              >
-                {isSaving() ? "💾 Saving..." : "💾 Save Chapter"}
-              </button>
-            </div>
-          </Show>
-
-          <Show when={uiStore.autoSaveEnabled()}>
-            <div class="p-2 flex justify-center items-center space-x-4">
-              <span class="text-xs text-gray-500 font-medium">✨ Autosave enabled</span>
-
-              {/* Sync Button - Only show if Google sync is enabled */}
-              <Show when={settingsStore.settings.googleSyncEnabled && googleAuth.signedIn}>
-                <button
-                  onClick={handleSync}
-                  disabled={isSyncing()}
-                  class="text-xs bg-blue-100 hover:bg-blue-200 disabled:bg-blue-50 text-blue-700 disabled:text-blue-400 font-medium py-1 px-3 rounded transition-colors duration-200"
-                >
-                  {isSyncing() ? "🔄 Syncing..." : "🔄 Sync Now"}
-                </button>
-              </Show>
-            </div>
           </Show>
         </div>
       </div>

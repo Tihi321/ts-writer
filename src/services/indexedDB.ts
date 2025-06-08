@@ -1,27 +1,58 @@
 import { openDB, DBSchema, IDBPDatabase } from "idb";
 
+// Cloud books.json structure
+export interface CloudBooksIndex {
+  books: {
+    [bookId: string]: {
+      name: string;
+      folderPath: string;
+      lastModified: number;
+      version: string;
+    };
+  };
+  lastUpdated: number;
+}
+
+// Book info.json structure (stored in each book folder)
+export interface BookInfo {
+  id: string;
+  name: string;
+  version: string;
+  createdAt: number;
+  lastModified: number;
+  config: BookConfig;
+}
+
+// Enhanced book entry for database
+export interface BookEntry {
+  id: string;
+  name: string;
+  source: "local" | "cloud" | "imported";
+  syncStatus: "in_sync" | "out_of_sync" | "local_only" | "cloud_only";
+  config: BookConfig;
+  localLastModified: number;
+  cloudLastModified?: number;
+  cloudFolderPath?: string;
+  version: string;
+}
+
 // Define the database schema
 interface TSWriterDB extends DBSchema {
   books: {
-    key: string; // book name
-    value: {
-      name: string;
-      config: BookConfig;
-      lastModified: number;
-      syncStatus: "synced" | "pending" | "conflict";
-    };
+    key: string; // book id
+    value: BookEntry;
   };
   chapters: {
-    key: string; // `${bookName}:${fileName}`
+    key: string; // `${bookId}:${fileName}`
     value: {
       key: string;
-      bookName: string;
+      bookId: string;
       fileName: string;
       content: string;
       lastModified: number;
       syncStatus: "synced" | "pending" | "conflict";
     };
-    indexes: { bookName: string };
+    indexes: { bookId: string };
   };
   syncMetadata: {
     key: string; // file path in Google Drive
@@ -65,22 +96,22 @@ export interface BookConfig {
 class IndexedDBService {
   private db: IDBPDatabase<TSWriterDB> | null = null;
   private readonly DB_NAME = "TSWriterDB";
-  private readonly DB_VERSION = 2; // Incremented for schema change
+  private readonly DB_VERSION = 3; // Incremented for schema change
 
   async initialize(): Promise<void> {
     if (this.db) return;
 
     this.db = await openDB<TSWriterDB>(this.DB_NAME, this.DB_VERSION, {
-      upgrade(db) {
+      upgrade(db, oldVersion) {
         // Create books store
         if (!db.objectStoreNames.contains("books")) {
-          db.createObjectStore("books", { keyPath: "name" });
+          db.createObjectStore("books", { keyPath: "id" });
         }
 
         // Create chapters store
         if (!db.objectStoreNames.contains("chapters")) {
           const chaptersStore = db.createObjectStore("chapters", { keyPath: "key" });
-          chaptersStore.createIndex("bookName", "bookName");
+          chaptersStore.createIndex("bookId", "bookId");
         }
 
         // Create sync metadata store
@@ -92,8 +123,17 @@ class IndexedDBService {
         if (!db.objectStoreNames.contains("appConfig")) {
           db.createObjectStore("appConfig", { keyPath: "key" });
         }
+
+        // Migration logic for existing data
+        if (oldVersion < 3) {
+          console.log("Migrating database to version 3...");
+          // Legacy data will be fixed after initialization
+        }
       },
     });
+
+    // Check if the database schema is correct
+    await this.validateAndFixSchema();
   }
 
   private ensureDB(): IDBPDatabase<TSWriterDB> {
@@ -103,51 +143,96 @@ class IndexedDBService {
     return this.db;
   }
 
-  // Book operations
-  async listBooks(): Promise<string[]> {
+  // Enhanced book operations
+  async listBooks(): Promise<BookEntry[]> {
     const db = this.ensureDB();
-    const books = await db.getAll("books");
-    return books.map((book) => book.name);
+    return await db.getAll("books");
   }
 
-  async getBookConfig(bookName: string): Promise<BookConfig | null> {
+  async listLocalBooks(): Promise<BookEntry[]> {
+    const books = await this.listBooks();
+    return books.filter((book) => book.source === "local");
+  }
+
+  async listCloudBooks(): Promise<BookEntry[]> {
+    const books = await this.listBooks();
+    return books.filter((book) => book.source === "cloud" || book.source === "imported");
+  }
+
+  async getBook(bookId: string): Promise<BookEntry | null> {
     const db = this.ensureDB();
-    const book = await db.get("books", bookName);
+    try {
+      return (await db.get("books", bookId)) || null;
+    } catch (error) {
+      console.error(`[IndexedDB] Error in getBook:`, error);
+      throw error;
+    }
+  }
+
+  async getBookConfig(bookId: string): Promise<BookConfig | null> {
+    const book = await this.getBook(bookId);
     return book?.config || null;
   }
 
-  async saveBookConfig(bookName: string, config: BookConfig): Promise<void> {
+  async saveBook(book: BookEntry): Promise<void> {
     const db = this.ensureDB();
-    const now = Date.now();
-
-    await db.put("books", {
-      name: bookName,
-      config,
-      lastModified: now,
-      syncStatus: "pending",
-    });
+    try {
+      await db.put("books", book);
+    } catch (error) {
+      console.error(`[IndexedDB] Error saving book:`, error);
+      throw error;
+    }
   }
 
-  async createBook(bookName: string): Promise<void> {
+  async createLocalBook(name: string): Promise<string> {
+    const bookId = `book_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const defaultConfig: BookConfig = {
       chapters: [],
       chapterOrder: [],
       ideas: {},
     };
 
-    await this.saveBookConfig(bookName, defaultConfig);
+    const book: BookEntry = {
+      id: bookId,
+      name,
+      source: "local",
+      syncStatus: "local_only",
+      config: defaultConfig,
+      localLastModified: Date.now(),
+      version: "1.0.0",
+    };
+
+    await this.saveBook(book);
+    return bookId;
   }
 
-  async deleteBook(bookName: string): Promise<void> {
+  async updateBookConfig(bookId: string, config: BookConfig): Promise<void> {
+    const book = await this.getBook(bookId);
+    if (!book) {
+      throw new Error(`Book with id ${bookId} not found`);
+    }
+
+    book.config = config;
+    book.localLastModified = Date.now();
+
+    // Update sync status based on source
+    if (book.source === "imported" || book.source === "cloud") {
+      book.syncStatus = "out_of_sync";
+    }
+
+    await this.saveBook(book);
+  }
+
+  async deleteBook(bookId: string): Promise<void> {
     const db = this.ensureDB();
     const tx = db.transaction(["books", "chapters"], "readwrite");
 
     // Delete book
-    await tx.objectStore("books").delete(bookName);
+    await tx.objectStore("books").delete(bookId);
 
     // Delete all chapters for this book
     const chaptersStore = tx.objectStore("chapters");
-    const chapters = await chaptersStore.index("bookName").getAll(bookName);
+    const chapters = await chaptersStore.index("bookId").getAll(bookId);
 
     for (const chapter of chapters) {
       await chaptersStore.delete(chapter.key);
@@ -156,38 +241,66 @@ class IndexedDBService {
     await tx.done;
   }
 
-  // Chapter operations
-  async getChapterContent(bookName: string, fileName: string): Promise<string | null> {
+  async updateBookSyncStatus(
+    bookId: string,
+    syncStatus: BookEntry["syncStatus"],
+    cloudLastModified?: number
+  ): Promise<void> {
+    const book = await this.getBook(bookId);
+    if (!book) {
+      throw new Error(`Book with id ${bookId} not found`);
+    }
+
+    book.syncStatus = syncStatus;
+    if (cloudLastModified !== undefined) {
+      book.cloudLastModified = cloudLastModified;
+    }
+
+    await this.saveBook(book);
+  }
+
+  // Chapter operations (updated to use bookId instead of bookName)
+  async getChapterContent(bookId: string, fileName: string): Promise<string | null> {
     const db = this.ensureDB();
-    const key = `${bookName}:${fileName}`;
+    const key = `${bookId}:${fileName}`;
     const chapter = await db.get("chapters", key);
     return chapter?.content || null;
   }
 
-  async saveChapterContent(bookName: string, fileName: string, content: string): Promise<void> {
+  async saveChapterContent(bookId: string, fileName: string, content: string): Promise<void> {
     const db = this.ensureDB();
-    const key = `${bookName}:${fileName}`;
+    const key = `${bookId}:${fileName}`;
     const now = Date.now();
 
     await db.put("chapters", {
       key,
-      bookName,
+      bookId,
       fileName,
       content,
       lastModified: now,
       syncStatus: "pending",
     });
+
+    // Update book's last modified time and sync status
+    const book = await this.getBook(bookId);
+    if (book) {
+      book.localLastModified = now;
+      if (book.source === "imported" || book.source === "cloud") {
+        book.syncStatus = "out_of_sync";
+      }
+      await this.saveBook(book);
+    }
   }
 
-  async deleteChapterContent(bookName: string, fileName: string): Promise<void> {
+  async deleteChapterContent(bookId: string, fileName: string): Promise<void> {
     const db = this.ensureDB();
-    const key = `${bookName}:${fileName}`;
+    const key = `${bookId}:${fileName}`;
     await db.delete("chapters", key);
   }
 
-  async listChapterFiles(bookName: string): Promise<string[]> {
+  async listChapterFiles(bookId: string): Promise<string[]> {
     const db = this.ensureDB();
-    const chapters = await db.getAllFromIndex("chapters", "bookName", bookName);
+    const chapters = await db.getAllFromIndex("chapters", "bookId", bookId);
     return chapters.map((chapter) => chapter.fileName);
   }
 
@@ -227,7 +340,7 @@ class IndexedDBService {
   // Utility methods for sync status
   async getPendingChanges(): Promise<{
     books: string[];
-    chapters: { bookName: string; fileName: string }[];
+    chapters: { bookId: string; fileName: string }[];
   }> {
     const db = this.ensureDB();
 
@@ -235,10 +348,12 @@ class IndexedDBService {
     const pendingChapters = await db.getAll("chapters");
 
     return {
-      books: pendingBooks.filter((book) => book.syncStatus === "pending").map((book) => book.name),
+      books: pendingBooks
+        .filter((book) => book.syncStatus === "out_of_sync")
+        .map((book) => book.name),
       chapters: pendingChapters
         .filter((chapter) => chapter.syncStatus === "pending")
-        .map((chapter) => ({ bookName: chapter.bookName, fileName: chapter.fileName })),
+        .map((chapter) => ({ bookId: chapter.bookId, fileName: chapter.fileName })),
     };
   }
 
@@ -248,7 +363,7 @@ class IndexedDBService {
     if (type === "book") {
       const book = await db.get("books", key);
       if (book) {
-        book.syncStatus = "synced";
+        book.syncStatus = "in_sync";
         await db.put("books", book);
       }
     } else {
@@ -258,6 +373,23 @@ class IndexedDBService {
         await db.put("chapters", chapter);
       }
     }
+  }
+
+  async clearPendingChangesForBook(bookId: string): Promise<void> {
+    const db = this.ensureDB();
+
+    // Mark all chapters for this book as synced
+    const chapters = await db.getAllFromIndex("chapters", "bookId", bookId);
+    const tx = db.transaction(["chapters"], "readwrite");
+
+    for (const chapter of chapters) {
+      if (chapter.syncStatus === "pending") {
+        chapter.syncStatus = "synced";
+        await tx.objectStore("chapters").put(chapter);
+      }
+    }
+
+    await tx.done;
   }
 
   // App configuration operations
@@ -328,6 +460,83 @@ class IndexedDBService {
   async clearAllConfig(): Promise<void> {
     const db = this.ensureDB();
     await db.clear("appConfig");
+  }
+
+  private async validateAndFixSchema(): Promise<void> {
+    try {
+      const db = this.ensureDB();
+
+      // Check if books store has the correct keyPath
+      const transaction = db.transaction(["books"], "readonly");
+      const booksStore = transaction.objectStore("books");
+
+      console.log(`[IndexedDB] Validating schema - Books store keyPath: "${booksStore.keyPath}"`);
+
+      if (booksStore.keyPath !== "id") {
+        console.error(
+          `[IndexedDB] SCHEMA ERROR: Books store has wrong keyPath: "${booksStore.keyPath}", expected: "id"`
+        );
+        console.log(`[IndexedDB] Database needs to be recreated with correct schema`);
+
+        // Close the current database
+        db.close();
+        this.db = null;
+
+        // Delete the database to force recreation
+        console.log(`[IndexedDB] Deleting database to fix schema...`);
+        await new Promise<void>((resolve, reject) => {
+          const deleteRequest = indexedDB.deleteDatabase(this.DB_NAME);
+          deleteRequest.onsuccess = () => {
+            console.log(`[IndexedDB] Database deleted successfully`);
+            resolve();
+          };
+          deleteRequest.onerror = () => {
+            console.error(`[IndexedDB] Failed to delete database:`, deleteRequest.error);
+            reject(deleteRequest.error);
+          };
+        });
+
+        // Recreate the database with correct schema
+        console.log(`[IndexedDB] Recreating database with correct schema...`);
+        this.db = await openDB<TSWriterDB>(this.DB_NAME, this.DB_VERSION, {
+          upgrade(db, oldVersion) {
+            console.log(`[IndexedDB] Creating fresh database with correct schema`);
+
+            // Create books store with correct keyPath
+            if (!db.objectStoreNames.contains("books")) {
+              const booksStore = db.createObjectStore("books", { keyPath: "id" });
+              console.log(`[IndexedDB] Created books store with keyPath: "id"`);
+            }
+
+            // Create chapters store
+            if (!db.objectStoreNames.contains("chapters")) {
+              const chaptersStore = db.createObjectStore("chapters", { keyPath: "key" });
+              chaptersStore.createIndex("bookId", "bookId");
+              console.log(`[IndexedDB] Created chapters store`);
+            }
+
+            // Create sync metadata store
+            if (!db.objectStoreNames.contains("syncMetadata")) {
+              db.createObjectStore("syncMetadata", { keyPath: "key" });
+              console.log(`[IndexedDB] Created syncMetadata store`);
+            }
+
+            // Create app config store
+            if (!db.objectStoreNames.contains("appConfig")) {
+              db.createObjectStore("appConfig", { keyPath: "key" });
+              console.log(`[IndexedDB] Created appConfig store`);
+            }
+          },
+        });
+
+        console.log(`[IndexedDB] Database recreated successfully with correct schema`);
+      } else {
+        console.log(`[IndexedDB] Schema validation passed - keyPath is correct`);
+      }
+    } catch (error) {
+      console.error(`[IndexedDB] Error validating schema:`, error);
+      // Don't throw - this is a best-effort fix
+    }
   }
 }
 

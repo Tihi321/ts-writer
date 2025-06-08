@@ -4,14 +4,12 @@ interface UIState {
   isZenMode: boolean;
   showChapters: boolean;
   showIdeas: boolean;
-  autoSaveEnabled: boolean;
 }
 
 const [uiState, setUIState] = createSignal<UIState>({
   isZenMode: false,
   showChapters: true,
   showIdeas: true,
-  autoSaveEnabled: true,
 });
 
 export const uiStore = {
@@ -20,7 +18,6 @@ export const uiStore = {
   isZenMode: () => uiState().isZenMode,
   showChapters: () => uiState().showChapters,
   showIdeas: () => uiState().showIdeas,
-  autoSaveEnabled: () => uiState().autoSaveEnabled,
 
   // Actions
   toggleZenMode: () => {
@@ -51,20 +48,12 @@ export const uiStore = {
     }));
   },
 
-  toggleAutoSave: () => {
-    setUIState((prev) => ({
-      ...prev,
-      autoSaveEnabled: !prev.autoSaveEnabled,
-    }));
-  },
-
   // Reset to default state
   resetToDefault: () => {
     setUIState({
       isZenMode: false,
       showChapters: true,
       showIdeas: true,
-      autoSaveEnabled: true,
     });
   },
 };

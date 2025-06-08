@@ -8,37 +8,39 @@ const [selectedChapter, setSelectedChapter] = createSignal<ChapterWithContent | 
 const [loading, setLoading] = createSignal<boolean>(false);
 const [error, setError] = createSignal<string | null>(null);
 
-// Effect to load chapters when the selected book changes
+// Load chapters when selected book changes
 createEffect(async () => {
   const book = bookStore.selectedBook();
-  if (book) {
+  if (!book) {
+    setChapters([]);
+    setSelectedChapter(null);
+    return;
+  }
+
+  try {
     setLoading(true);
-    try {
-      const chapterList = await chapterService.getAllChapters(book);
-      setChapters(chapterList);
-      setSelectedChapter(null); // Reset selected chapter when book changes
-    } catch (err) {
-      setError("Failed to load chapters.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  } else {
-    setChapters([]); // Clear chapters if no book is selected
+    setError(null);
+    const bookChapters = await chapterService.getAllChapters(book.id);
+    setChapters(bookChapters);
+  } catch (err) {
+    setError("Failed to load chapters.");
+    console.error(err);
+  } finally {
+    setLoading(false);
   }
 });
 
-// Function to select a chapter and load its content
 const selectChapter = async (chapterId: string) => {
   const book = bookStore.selectedBook();
   if (!book) return;
 
-  setLoading(true);
   try {
-    const chapterContent = await chapterService.getChapterById(book, chapterId);
-    setSelectedChapter(chapterContent);
+    setLoading(true);
+    setError(null);
+    const chapter = await chapterService.getChapterById(book.id, chapterId);
+    setSelectedChapter(chapter);
   } catch (err) {
-    setError("Failed to load chapter content.");
+    setError("Failed to load chapter.");
     console.error(err);
   } finally {
     setLoading(false);
@@ -47,9 +49,10 @@ const selectChapter = async (chapterId: string) => {
 
 const createNewChapter = async (title: string) => {
   const book = bookStore.selectedBook();
+
   if (!book) return;
   try {
-    const newChapter = await chapterService.createChapter(book, title);
+    const newChapter = await chapterService.createChapter(book.id, title);
     setChapters([...chapters(), newChapter]);
     return newChapter;
   } catch (err) {
@@ -58,24 +61,26 @@ const createNewChapter = async (title: string) => {
   }
 };
 
-const updateChapter = async (id: string, content: string) => {
+const updateChapter = async (chapterId: string, updates: { title?: string; content?: string }) => {
   const book = bookStore.selectedBook();
   if (!book) return;
 
   try {
-    const updatedChapter = await chapterService.updateChapter(book, id, { content });
-    setSelectedChapter(updatedChapter);
+    setError(null);
+    const updatedChapter = await chapterService.updateChapter(book.id, chapterId, updates);
 
-    // Also update the chapter in the main list if needed (for previews, etc.)
-    const currentChapters = chapters();
-    const index = currentChapters.findIndex((c) => c.id === id);
-    if (index !== -1) {
-      // Note: The list contains `Chapter`, but `updateChapter` returns `ChapterWithContent`.
-      // We only need to update fields present in `Chapter`.
-      const newChapters = [...currentChapters];
-      newChapters[index] = { ...newChapters[index], ...updatedChapter }; // this might need adjustment based on returned object
-      setChapters(newChapters);
+    // Update chapters list if title changed
+    if (updates.title) {
+      setChapters(
+        chapters().map((ch) => (ch.id === chapterId ? { ...ch, title: updates.title! } : ch))
+      );
     }
+
+    // Update selected chapter if it's the one being updated
+    if (selectedChapter()?.id === chapterId) {
+      setSelectedChapter(updatedChapter);
+    }
+
     return updatedChapter;
   } catch (err) {
     setError("Failed to update chapter.");
@@ -83,48 +88,23 @@ const updateChapter = async (id: string, content: string) => {
   }
 };
 
-const updateChapterTitle = async (id: string, title: string) => {
-  const book = bookStore.selectedBook();
-  if (!book) return;
-
-  try {
-    const updatedChapter = await chapterService.updateChapter(book, id, { title });
-
-    // Update the chapter in the main list
-    const currentChapters = chapters();
-    const index = currentChapters.findIndex((c) => c.id === id);
-    if (index !== -1) {
-      const newChapters = [...currentChapters];
-      newChapters[index] = { ...newChapters[index], title };
-      setChapters(newChapters);
-    }
-
-    // Update selected chapter if it's the one being updated
-    if (selectedChapter()?.id === id) {
-      setSelectedChapter(updatedChapter);
-    }
-
-    return updatedChapter;
-  } catch (err) {
-    setError("Failed to update chapter title.");
-    console.error(err);
-  }
+const updateChapterTitle = async (chapterId: string, newTitle: string) => {
+  return updateChapter(chapterId, { title: newTitle });
 };
 
-const deleteChapter = async (id: string) => {
+const deleteChapter = async (chapterId: string) => {
   const book = bookStore.selectedBook();
   if (!book) return;
 
   try {
-    await chapterService.deleteChapter(book, id);
+    setError(null);
+    await chapterService.deleteChapter(book.id, chapterId);
 
-    // Remove chapter from the list
-    const currentChapters = chapters();
-    const newChapters = currentChapters.filter((c) => c.id !== id);
-    setChapters(newChapters);
+    // Remove from chapters list
+    setChapters(chapters().filter((ch) => ch.id !== chapterId));
 
     // Clear selected chapter if it was the deleted one
-    if (selectedChapter()?.id === id) {
+    if (selectedChapter()?.id === chapterId) {
       setSelectedChapter(null);
     }
   } catch (err) {
@@ -138,13 +118,30 @@ const reorderChapters = async (newOrder: string[]) => {
   if (!book) return;
 
   try {
-    const result = await chapterService.reorderChapters(book, newOrder);
-    // Update local state with the reordered chapters from the server
+    setError(null);
+    const result = await chapterService.reorderChapters(book.id, newOrder);
     setChapters(result.chapters);
   } catch (err) {
     setError("Failed to reorder chapters.");
     console.error(err);
   }
+};
+
+// Auto-save chapter content
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const autoSaveChapterContent = (chapterId: string, content: string) => {
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+  }
+
+  saveTimeout = setTimeout(async () => {
+    try {
+      await updateChapter(chapterId, { content });
+    } catch (err) {
+      console.error("Auto-save failed:", err);
+    }
+  }, 1000); // Save after 1 second of inactivity
 };
 
 export const chapterStore = {
@@ -158,5 +155,6 @@ export const chapterStore = {
   updateChapterTitle,
   deleteChapter,
   reorderChapters,
+  autoSaveChapterContent,
   // Add other chapter actions (delete, reorder) as needed
 };

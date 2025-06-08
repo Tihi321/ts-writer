@@ -2,10 +2,12 @@ import { Component, createSignal } from "solid-js";
 import { settingsStore } from "@stores/settingsStore";
 import CreateBookModal from "./CreateBookModal";
 import LoadBookModal from "./LoadBookModal";
+import BookManagementModal from "./BookManagementModal";
 
 const BookList: Component = () => {
   const [showCreateModal, setShowCreateModal] = createSignal(false);
   const [showLoadModal, setShowLoadModal] = createSignal(false);
+  const [showManagementModal, setShowManagementModal] = createSignal(false);
 
   return (
     <>
@@ -16,7 +18,7 @@ const BookList: Component = () => {
             <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome to TSWriter</h2>
             <p class="text-gray-600">Create a new book or load an existing one to begin writing</p>
             <p class="text-sm text-gray-500 mt-2">
-              Your work is automatically saved locally and can be synced to Google Drive.
+              Your work is automatically saved locally. Use manual sync to sync with Google Drive.
             </p>
           </div>
 
@@ -56,6 +58,23 @@ const BookList: Component = () => {
             </button>
 
             <button
+              onClick={() => setShowManagementModal(true)}
+              class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 shadow-sm"
+            >
+              <div class="flex items-center justify-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
+                </svg>
+                <span>Manage Books</span>
+              </div>
+            </button>
+
+            <button
               onClick={() => settingsStore.openSettings()}
               class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors duration-200 border border-gray-300"
             >
@@ -84,6 +103,10 @@ const BookList: Component = () => {
       {/* Modals */}
       <CreateBookModal isOpen={showCreateModal()} onClose={() => setShowCreateModal(false)} />
       <LoadBookModal isOpen={showLoadModal()} onClose={() => setShowLoadModal(false)} />
+      <BookManagementModal
+        isOpen={showManagementModal()}
+        onClose={() => setShowManagementModal(false)}
+      />
     </>
   );
 };

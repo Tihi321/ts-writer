@@ -1,12 +1,8 @@
 import { Component, createSignal, onMount, onCleanup } from "solid-js";
 import { dataService, SyncStatus } from "../services/dataService";
-import { googleAuth } from "../services/googleAuth";
 
 const SyncStatusComponent: Component = () => {
   const [syncStatus, setSyncStatus] = createSignal<SyncStatus>("offline");
-  const [lastSyncTime, setLastSyncTime] = createSignal<Date | null>(null);
-  const [isManualSyncing, setIsManualSyncing] = createSignal(false);
-
   let intervalId: ReturnType<typeof setInterval>;
 
   const updateSyncStatus = async () => {
@@ -16,23 +12,6 @@ const SyncStatusComponent: Component = () => {
     } catch (error) {
       console.error("Failed to get sync status:", error);
       setSyncStatus("error");
-    }
-  };
-
-  const handleManualSync = async () => {
-    if (!googleAuth.signedIn || isManualSyncing()) return;
-
-    try {
-      setIsManualSyncing(true);
-      await dataService.forceSyncToCloud();
-      await dataService.forceSyncFromCloud();
-      setLastSyncTime(new Date());
-      await updateSyncStatus();
-    } catch (error) {
-      console.error("Manual sync failed:", error);
-      setSyncStatus("error");
-    } finally {
-      setIsManualSyncing(false);
     }
   };
 
@@ -105,28 +84,6 @@ const SyncStatusComponent: Component = () => {
         <span class="text-lg">{getStatusIcon()}</span>
         <span>{getStatusText()}</span>
       </div>
-
-      {googleAuth.signedIn && (
-        <button
-          onClick={handleManualSync}
-          disabled={isManualSyncing() || syncStatus() === "pending"}
-          class="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 disabled:text-gray-400 text-blue-700 rounded transition-colors duration-200"
-          title="Force sync with Google Drive"
-        >
-          {isManualSyncing() ? (
-            <div class="flex items-center space-x-1">
-              <div class="animate-spin rounded-full h-3 w-3 border-b border-blue-600"></div>
-              <span>Syncing...</span>
-            </div>
-          ) : (
-            "🔄 Sync"
-          )}
-        </button>
-      )}
-
-      {lastSyncTime() && (
-        <span class="text-xs text-gray-500">Last sync: {lastSyncTime()!.toLocaleTimeString()}</span>
-      )}
     </div>
   );
 };
