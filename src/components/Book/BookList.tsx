@@ -1,11 +1,9 @@
 import { Component, createSignal } from "solid-js";
 import { settingsStore } from "@stores/settingsStore";
-import CreateBookModal from "./CreateBookModal";
 import LoadBookModal from "./LoadBookModal";
 import BookManagementModal from "./BookManagementModal";
 
 const BookList: Component = () => {
-  const [showCreateModal, setShowCreateModal] = createSignal(false);
   const [showLoadModal, setShowLoadModal] = createSignal(false);
   const [showManagementModal, setShowManagementModal] = createSignal(false);
 
@@ -23,23 +21,6 @@ const BookList: Component = () => {
           </div>
 
           <div class="space-y-4">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              class="w-full border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 font-medium py-3 px-4 transition-colors duration-200"
-            >
-              <div class="flex items-center justify-center space-x-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                <span>Create New Book</span>
-              </div>
-            </button>
-
             <button
               onClick={() => setShowLoadModal(true)}
               class="w-full border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 font-medium py-3 px-4 transition-colors duration-200"
@@ -67,7 +48,7 @@ const BookList: Component = () => {
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10"
                   />
                 </svg>
                 <span>Manage Books</span>
@@ -101,7 +82,6 @@ const BookList: Component = () => {
       </div>
 
       {/* Modals */}
-      <CreateBookModal isOpen={showCreateModal()} onClose={() => setShowCreateModal(false)} />
       <LoadBookModal isOpen={showLoadModal()} onClose={() => setShowLoadModal(false)} />
       <BookManagementModal
         isOpen={showManagementModal()}

@@ -141,8 +141,8 @@ const SettingsModal: Component = () => {
 
   return (
     <Show when={settingsStore.showSettings}>
-      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white border border-gray-300 shadow-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="fixed inset-0 z-50">
+        <div class="bg-white w-full h-full overflow-hidden flex flex-col">
           {/* Header */}
           <div class="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 class="text-2xl font-bold text-gray-900">Settings</h2>

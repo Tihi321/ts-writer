@@ -218,7 +218,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
           <div class="relative">
             <button
               onClick={() => setShowMenu(!showMenu())}
-              class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              class="p-2 text-gray-800 hover:text-black hover:bg-gray-100 rounded-md transition-colors border border-gray-300 hover:border-gray-400"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -347,8 +347,8 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
 
   return (
     <Show when={props.isOpen}>
-      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white border border-gray-300 shadow-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+      <div class="fixed inset-0 z-50">
+        <div class="bg-white w-full h-full overflow-hidden flex flex-col">
           {/* Header */}
           <div class="flex items-center justify-between p-6 border-b border-gray-200">
             <div>
@@ -409,7 +409,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
           </div>
 
           {/* Content */}
-          <div class="p-6 overflow-y-auto max-h-[60vh]">
+          <div class="p-6 overflow-y-auto flex-1">
             <Show when={error()}>
               <div class="mb-4 p-3 border border-gray-400 text-gray-700">{error()}</div>
             </Show>
@@ -554,7 +554,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
 
       {/* Delete Confirmation Dialog */}
       <Show when={deleteDialog().isOpen}>
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
+        <div class="fixed inset-0 z-[70] flex items-center justify-center p-4">
           <div class="bg-white border border-gray-300 shadow-lg max-w-md w-full">
             <div class="p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-2">Delete Book</h3>
@@ -699,7 +699,7 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
 
       {/* Rename Dialog */}
       <Show when={renameDialog().isOpen}>
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
+        <div class="fixed inset-0 z-[70] flex items-center justify-center p-4">
           <div class="bg-white border border-gray-300 shadow-lg max-w-md w-full">
             <div class="p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-2">Rename Book</h3>

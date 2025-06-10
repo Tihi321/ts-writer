@@ -158,7 +158,7 @@ const ChapterItem: Component<{
 
       {/* Delete Confirmation Modal */}
       <Show when={showDeleteConfirm()}>
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="bg-white p-6 border border-gray-300 shadow-lg max-w-md w-full mx-4">
             <h3 class="text-lg font-semibold mb-4 text-gray-900">Delete Chapter</h3>
             <p class="text-gray-600 mb-6">
