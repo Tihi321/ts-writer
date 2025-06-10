@@ -2,6 +2,7 @@ import { Component, createSignal } from "solid-js";
 import { settingsStore } from "@stores/settingsStore";
 import LoadBookModal from "./LoadBookModal";
 import BookManagementModal from "./BookManagementModal";
+import "../../styles/themes.css";
 
 const BookList: Component = () => {
   const [showLoadModal, setShowLoadModal] = createSignal(false);
@@ -10,12 +11,14 @@ const BookList: Component = () => {
   return (
     <>
       <div class="flex flex-col items-center justify-center h-full">
-        <div class="p-8 border border-gray-300 max-w-md w-full mx-4">
+        <div class="p-8 theme-card max-w-md w-full mx-4">
           <div class="text-center mb-6">
             <div class="text-6xl mb-4">📚</div>
-            <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome to TSWriter</h2>
-            <p class="text-gray-600">Create a new book or load an existing one to begin writing</p>
-            <p class="text-sm text-gray-500 mt-2">
+            <h2 class="text-3xl font-bold theme-text-primary mb-2">Welcome to TSWriter</h2>
+            <p class="theme-text-tertiary">
+              Create a new book or load an existing one to begin writing
+            </p>
+            <p class="text-sm theme-text-muted mt-2">
               Your work is automatically saved locally. Use manual sync to sync with Google Drive.
             </p>
           </div>
@@ -23,7 +26,7 @@ const BookList: Component = () => {
           <div class="space-y-4">
             <button
               onClick={() => setShowLoadModal(true)}
-              class="w-full border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 font-medium py-3 px-4 transition-colors duration-200"
+              class="w-full theme-btn-primary font-medium py-3 px-4 transition-colors duration-200"
             >
               <div class="flex items-center justify-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +43,7 @@ const BookList: Component = () => {
 
             <button
               onClick={() => setShowManagementModal(true)}
-              class="w-full border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 font-medium py-3 px-4 transition-colors duration-200"
+              class="w-full theme-btn-primary font-medium py-3 px-4 transition-colors duration-200"
             >
               <div class="flex items-center justify-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,7 +60,7 @@ const BookList: Component = () => {
 
             <button
               onClick={() => settingsStore.openSettings()}
-              class="w-full border border-gray-300 text-gray-700 hover:text-gray-800 hover:border-gray-400 font-medium py-3 px-4 transition-colors duration-200"
+              class="w-full theme-btn-secondary font-medium py-3 px-4 transition-colors duration-200"
             >
               <div class="flex items-center justify-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

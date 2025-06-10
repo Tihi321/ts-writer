@@ -2,6 +2,7 @@ import { Component, createSignal, For, Show } from "solid-js";
 import { chapterStore } from "../../stores/chapterStore";
 import { ideaStore } from "../../stores/ideaStore";
 import { Idea } from "../../stores/types";
+import "../../styles/themes.css";
 
 const IdeaItem: Component<{
   idea: Idea;
@@ -64,7 +65,7 @@ const IdeaItem: Component<{
 
   return (
     <div
-      class="p-4 border border-gray-200 cursor-pointer group relative hover:border-gray-300 transition-all duration-200"
+      class="p-4 theme-card cursor-pointer group relative theme-hover-border transition-all duration-200"
       draggable={!isEditing()}
       onDragStart={(e) => !isEditing() && props.onDragStart(e, props.idea)}
       onDragOver={props.onDragOver}
@@ -72,7 +73,7 @@ const IdeaItem: Component<{
     >
       <div class="flex items-start">
         <Show when={!isEditing()}>
-          <span class="mr-3 text-gray-400 cursor-grab text-lg hover:text-gray-600 transition-colors">
+          <span class="mr-3 theme-text-muted cursor-grab text-lg hover:theme-text-tertiary transition-colors">
             ⋮⋮
           </span>
         </Show>
@@ -81,7 +82,7 @@ const IdeaItem: Component<{
           when={isEditing()}
           fallback={
             <div class="flex-1 flex items-start justify-between">
-              <p class="text-sm typewriter-text text-gray-700 flex-1 leading-relaxed">
+              <p class="text-sm typewriter-text theme-text-secondary flex-1 leading-relaxed">
                 {props.idea.text}
               </p>
               <div class="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2 ml-3 flex-shrink-0">
@@ -90,7 +91,7 @@ const IdeaItem: Component<{
                     e.stopPropagation();
                     handleEdit();
                   }}
-                  class="text-gray-500 hover:text-gray-700 text-lg p-1 border border-gray-300 hover:border-gray-400 transition-colors"
+                  class="text-lg p-1 theme-btn-secondary transition-colors"
                   title="Edit idea"
                 >
                   ✏️
@@ -100,7 +101,7 @@ const IdeaItem: Component<{
                     e.stopPropagation();
                     setShowDeleteConfirm(true);
                   }}
-                  class="text-gray-500 hover:text-gray-700 text-lg p-1 border border-gray-300 hover:border-gray-400 transition-colors"
+                  class="text-lg p-1 theme-btn-secondary transition-colors"
                   title="Delete idea"
                 >
                   🗑️
@@ -114,7 +115,7 @@ const IdeaItem: Component<{
               value={editText()}
               onInput={(e) => setEditText(e.currentTarget.value)}
               onKeyDown={handleKeyPress}
-              class="flex-1 px-3 py-2 border border-gray-300 text-sm typewriter-text resize-none focus:border-gray-500 focus:outline-none"
+              class="flex-1 px-3 py-2 theme-input text-sm typewriter-text resize-none"
               onClick={(e) => e.stopPropagation()}
               rows="3"
               autofocus
@@ -125,7 +126,7 @@ const IdeaItem: Component<{
                   e.stopPropagation();
                   handleSaveEdit();
                 }}
-                class="text-gray-700 hover:text-gray-900 text-sm px-3 py-1 border border-gray-300 hover:border-gray-400 font-medium transition-colors"
+                class="text-sm px-3 py-1 theme-btn-primary font-medium transition-colors"
                 title="Save"
               >
                 ✓ Save
@@ -135,7 +136,7 @@ const IdeaItem: Component<{
                   e.stopPropagation();
                   handleCancelEdit();
                 }}
-                class="text-gray-600 hover:text-gray-800 text-sm px-3 py-1 border border-gray-300 hover:border-gray-400 font-medium transition-colors"
+                class="text-sm px-3 py-1 theme-btn-secondary font-medium transition-colors"
                 title="Cancel"
               >
                 ✕ Cancel
@@ -148,22 +149,19 @@ const IdeaItem: Component<{
       {/* Delete Confirmation Modal */}
       <Show when={showDeleteConfirm()}>
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div class="bg-white p-6 border border-gray-300 shadow-lg max-w-md w-full mx-4">
-            <h3 class="text-lg font-semibold mb-4 text-gray-900">Delete Idea</h3>
-            <p class="text-gray-600 mb-6">
+          <div class="p-6 theme-border-primary border theme-shadow-lg max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4 theme-text-primary">Delete Idea</h3>
+            <p class="theme-text-tertiary mb-6">
               Are you sure you want to delete this idea? This action cannot be undone.
             </p>
             <div class="flex justify-end space-x-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                class="px-4 py-2 text-gray-600 border border-gray-300 hover:text-gray-800 hover:border-gray-400 transition-colors"
+                class="px-4 py-2 theme-btn-secondary transition-colors"
               >
                 Cancel
               </button>
-              <button
-                onClick={handleDelete}
-                class="px-4 py-2 text-gray-800 border border-gray-600 hover:text-gray-900 hover:border-gray-700 transition-colors"
-              >
+              <button onClick={handleDelete} class="px-4 py-2 theme-btn-primary transition-colors">
                 Delete
               </button>
             </div>
@@ -247,28 +245,30 @@ const IdeasSidebar: Component = () => {
     <Show
       when={chapterStore.selectedChapter()}
       fallback={
-        <div class="p-6 flex items-center justify-center h-full text-gray-500">
+        <div class="p-6 flex items-center justify-center h-full theme-text-muted">
           <div class="text-center">
             <div class="text-5xl mb-4">💡</div>
-            <p class="font-medium text-lg text-gray-700">Select a chapter to capture ideas</p>
-            <p class="text-sm text-gray-500 mt-2">Your thoughts matter...</p>
+            <p class="font-medium text-lg theme-text-secondary">
+              Select a chapter to capture ideas
+            </p>
+            <p class="text-sm theme-text-muted mt-2">Your thoughts matter...</p>
           </div>
         </div>
       }
     >
       <div class="p-6 h-full">
         <Show when={ideaStore.loading()}>
-          <p class="text-gray-500">Loading ideas...</p>
+          <p class="theme-text-muted">Loading ideas...</p>
         </Show>
 
         <div class="space-y-3 mb-6">
           <For
             each={ideaStore.ideas()}
             fallback={
-              <div class="text-center p-8 border-2 border-dashed border-gray-300">
+              <div class="text-center p-8 border-2 border-dashed theme-border-primary">
                 <div class="text-3xl mb-2">📝</div>
-                <p class="text-sm text-gray-500">No ideas captured yet</p>
-                <p class="text-xs text-gray-400 mt-1">Start writing your thoughts below</p>
+                <p class="text-sm theme-text-muted">No ideas captured yet</p>
+                <p class="text-xs theme-text-disabled mt-1">Start writing your thoughts below</p>
               </div>
             }
           >
@@ -285,14 +285,14 @@ const IdeasSidebar: Component = () => {
 
         <div class="space-y-3">
           <textarea
-            class="w-full p-4 border border-gray-300 typewriter-text h-24 focus:border-gray-500 focus:outline-none resize-none"
+            class="w-full p-4 theme-input typewriter-text h-24 resize-none"
             placeholder="Capture a new idea..."
             value={newIdeaText()}
             onInput={(e) => setNewIdeaText(e.currentTarget.value)}
           />
           <button
             onClick={handleAddIdea}
-            class="w-full border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 font-medium py-3 px-4 transition-colors duration-200"
+            class="w-full theme-btn-primary font-medium py-3 px-4 transition-colors duration-200"
           >
             💡 Add Idea
           </button>

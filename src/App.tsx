@@ -14,11 +14,16 @@ import { bookStore } from "@stores/bookStore";
 import { uiStore } from "@stores/uiStore";
 import { settingsStore } from "@stores/settingsStore";
 import { dataService } from "@services/dataService";
+import { initializeTheme } from "./utils/theme";
+import "./styles/themes.css";
 
 const App: Component = () => {
   // Initialize services on app startup
   onMount(async () => {
     try {
+      // Initialize theme first
+      initializeTheme();
+
       // Initialize settings first
       settingsStore.initialize();
 
@@ -31,7 +36,7 @@ const App: Component = () => {
 
   return (
     <DragDropProvider>
-      <div class="flex flex-col h-screen bg-white">
+      <div class="flex flex-col h-screen theme-bg-primary">
         {/* Settings Modal */}
         <SettingsModal />
 

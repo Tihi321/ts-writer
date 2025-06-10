@@ -8,6 +8,7 @@ import { googleAuth } from "../../services/googleAuth";
 import BookManagementModal from "../Book/BookManagementModal";
 import { bookService } from "../../services/bookService";
 import { chapterStore } from "@stores/chapterStore";
+import "../../styles/themes.css";
 
 const TopToolbar: Component = () => {
   const [showBookManagement, setShowBookManagement] = createSignal(false);
@@ -126,14 +127,14 @@ const TopToolbar: Component = () => {
 
   return (
     <>
-      <div class="fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-300">
+      <div class="fixed top-0 left-0 right-0 z-40 theme-bg-secondary theme-border-primary border-b">
         <div class="flex items-center justify-between px-4 py-2">
           {/* Left side - App info and back button */}
           <div class="flex items-center space-x-3">
             <Show when={bookStore.selectedBook()}>
               <button
                 onClick={() => bookStore.clearSelection()}
-                class="p-1.5 border border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-all duration-200"
+                class="p-1.5 theme-btn-secondary transition-all duration-200"
                 title="Back to Books"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,8 +148,8 @@ const TopToolbar: Component = () => {
               </button>
             </Show>
             <div class="text-lg">📝</div>
-            <h1 class="text-lg font-semibold tracking-tight text-gray-900">TSWriter</h1>
-            <div class="text-xs text-gray-500 font-medium hidden sm:block">
+            <h1 class="text-lg font-semibold tracking-tight theme-text-primary">TSWriter</h1>
+            <div class="text-xs theme-text-muted font-medium hidden sm:block">
               A Writer's Companion
             </div>
 
@@ -156,13 +157,13 @@ const TopToolbar: Component = () => {
             <Show when={bookStore.selectedBook()}>
               <div class="flex items-center space-x-1">
                 {/* Current Book Name */}
-                <span class="text-sm text-gray-600 font-medium hidden sm:inline">
+                <span class="text-sm theme-text-tertiary font-medium hidden sm:inline">
                   {bookStore.selectedBook()?.name}
                 </span>
 
                 {/* Sync Status Indicator */}
                 <Show when={bookStore.selectedBook()?.source !== "local"}>
-                  <span class="text-xs px-2 py-1 border border-gray-300 text-gray-600">
+                  <span class="text-xs px-2 py-1 theme-border-primary border theme-text-tertiary">
                     {bookStore.selectedBook()?.syncStatus === "in_sync" ? "✅" : "⚠️"}
                   </span>
                 </Show>
@@ -173,7 +174,7 @@ const TopToolbar: Component = () => {
                   disabled={
                     syncing() || !settingsStore.settings.googleSyncEnabled || !googleAuth.signedIn
                   }
-                  class="p-1.5 border border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-all duration-200 disabled:opacity-50"
+                  class="p-1.5 theme-btn-secondary transition-all duration-200 disabled:opacity-50"
                   title="Pull from Cloud (overwrite local with cloud)"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +193,7 @@ const TopToolbar: Component = () => {
                   disabled={
                     syncing() || !settingsStore.settings.googleSyncEnabled || !googleAuth.signedIn
                   }
-                  class="p-1.5 border border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-all duration-200 disabled:opacity-50"
+                  class="p-1.5 theme-btn-secondary transition-all duration-200 disabled:opacity-50"
                   title="Push to Cloud (overwrite cloud with local)"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,11 +206,11 @@ const TopToolbar: Component = () => {
                   </svg>
                 </button>
 
-                <div class="w-px h-4 bg-gray-300"></div>
+                <div class="w-px h-4 theme-border-primary bg-current"></div>
 
                 <button
                   onClick={() => setShowBookManagement(true)}
-                  class="p-1.5 border border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-all duration-200"
+                  class="p-1.5 theme-btn-secondary transition-all duration-200"
                   title="Manage Books"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,9 +234,7 @@ const TopToolbar: Component = () => {
               <button
                 onClick={() => uiStore.toggleZenMode()}
                 class={`p-1.5 border transition-all duration-200 ${
-                  uiStore.isZenMode()
-                    ? "border-gray-600 text-gray-800"
-                    : "border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
+                  uiStore.isZenMode() ? "theme-btn-primary" : "theme-btn-secondary"
                 }`}
                 title={
                   uiStore.isZenMode()
@@ -263,9 +262,7 @@ const TopToolbar: Component = () => {
               <button
                 onClick={() => uiStore.toggleChapters()}
                 class={`p-1.5 border transition-all duration-200 ${
-                  uiStore.showChapters()
-                    ? "border-gray-600 text-gray-800"
-                    : "border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400"
+                  uiStore.showChapters() ? "theme-btn-primary" : "theme-btn-secondary opacity-75"
                 }`}
                 title={
                   uiStore.showChapters()
@@ -287,9 +284,7 @@ const TopToolbar: Component = () => {
               <button
                 onClick={() => uiStore.toggleIdeas()}
                 class={`p-1.5 border transition-all duration-200 ${
-                  uiStore.showIdeas()
-                    ? "border-gray-600 text-gray-800"
-                    : "border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400"
+                  uiStore.showIdeas() ? "theme-btn-primary" : "theme-btn-secondary opacity-75"
                 }`}
                 title={
                   uiStore.showIdeas()
@@ -307,13 +302,13 @@ const TopToolbar: Component = () => {
                 </svg>
               </button>
 
-              <div class="w-px h-4 bg-gray-300"></div>
+              <div class="w-px h-4 theme-border-primary bg-current"></div>
             </Show>
 
             {/* Autosave Status and Save Button - Only show when a book is selected */}
             <Show when={bookStore.selectedBook()}>
               <Show when={settingsStore.settings.autoSave}>
-                <span class="text-xs text-gray-600 font-medium flex items-center space-x-1 border border-gray-300 px-2 py-1">
+                <span class="text-xs theme-text-tertiary font-medium flex items-center space-x-1 theme-border-primary border px-2 py-1">
                   <span>✨</span>
                   <span class="hidden sm:inline">Autosave</span>
                 </span>
@@ -322,19 +317,19 @@ const TopToolbar: Component = () => {
                 <button
                   onClick={handleSave}
                   disabled={saving()}
-                  class="text-xs border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 disabled:border-gray-400 disabled:text-gray-400 font-medium py-1.5 px-3 transition-colors duration-200"
+                  class="text-xs theme-btn-primary font-medium py-1.5 px-3 transition-colors duration-200 disabled:opacity-50"
                   title="Save Chapter"
                 >
                   {saving() ? "💾 Saving..." : "💾 Save"}
                 </button>
               </Show>
-              <div class="w-px h-4 bg-gray-300"></div>
+              <div class="w-px h-4 theme-border-primary bg-current"></div>
             </Show>
 
             {/* Settings Button */}
             <button
               onClick={() => settingsStore.openSettings()}
-              class="p-1.5 border border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-all duration-200"
+              class="p-1.5 theme-btn-secondary transition-all duration-200"
               title="Settings"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -353,12 +348,12 @@ const TopToolbar: Component = () => {
               </svg>
             </button>
 
-            <div class="w-px h-4 bg-gray-300"></div>
+            <div class="w-px h-4 theme-border-primary bg-current"></div>
 
             {/* Sync Status - Only show if Google sync is enabled */}
             <Show when={settingsStore.settings.googleSyncEnabled && googleAuth.signedIn}>
               <SyncStatusComponent />
-              <div class="w-px h-4 bg-gray-300"></div>
+              <div class="w-px h-4 theme-border-primary bg-current"></div>
             </Show>
 
             {/* User Info - Only show if signed in */}
@@ -373,14 +368,14 @@ const TopToolbar: Component = () => {
                 <img
                   src={googleAuth.currentUser!.picture}
                   alt={googleAuth.currentUser!.name}
-                  class="w-6 h-6 rounded-full border border-gray-300"
+                  class="w-6 h-6 rounded-full theme-border-primary border"
                   title={`Signed in as ${googleAuth.currentUser!.name}`}
                 />
-                <span class="text-xs text-gray-600 hidden sm:inline">
+                <span class="text-xs theme-text-tertiary hidden sm:inline">
                   {googleAuth.currentUser!.name}
                 </span>
               </div>
-              <div class="w-px h-4 bg-gray-300"></div>
+              <div class="w-px h-4 theme-border-primary bg-current"></div>
             </Show>
           </div>
         </div>
@@ -388,12 +383,12 @@ const TopToolbar: Component = () => {
 
       {/* Sync Error Toast */}
       <Show when={syncError()}>
-        <div class="fixed top-16 right-4 z-50 border border-gray-400 text-gray-700 px-4 py-3 bg-white shadow-lg max-w-md">
+        <div class="fixed top-16 right-4 z-50 theme-alert theme-shadow-medium max-w-md">
           <div class="flex items-center justify-between">
             <span class="text-sm">{syncError()}</span>
             <button
               onClick={() => setSyncError(null)}
-              class="ml-2 text-gray-500 hover:text-gray-700"
+              class="ml-2 theme-text-muted hover:theme-text-secondary"
             >
               ×
             </button>
@@ -403,12 +398,12 @@ const TopToolbar: Component = () => {
 
       {/* Sync Success Toast */}
       <Show when={syncSuccess()}>
-        <div class="fixed top-16 right-4 z-50 border border-gray-400 text-gray-700 px-4 py-3 bg-white shadow-lg max-w-md">
+        <div class="fixed top-16 right-4 z-50 theme-alert theme-shadow-medium max-w-md">
           <div class="flex items-center justify-between">
             <span class="text-sm">{syncSuccess()}</span>
             <button
               onClick={() => setSyncSuccess(null)}
-              class="ml-2 text-gray-500 hover:text-gray-700"
+              class="ml-2 theme-text-muted hover:theme-text-secondary"
             >
               ×
             </button>

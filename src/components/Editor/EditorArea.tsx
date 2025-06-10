@@ -3,6 +3,7 @@ import { chapterStore } from "../../stores/chapterStore";
 import { Chapter } from "../../stores/types";
 import { marked } from "marked";
 import { settingsStore } from "../../stores/settingsStore";
+import "../../styles/themes.css";
 
 // Optional: Add Tailwind's typography plugin for better preview styling
 // npm install -D @tailwindcss/typography
@@ -677,120 +678,122 @@ const EditorArea: Component = () => {
     <Show
       when={chapterStore.selectedChapter()}
       fallback={
-        <div class="flex items-center justify-center h-full text-gray-500">
+        <div class="flex items-center justify-center h-full theme-text-muted">
           <div class="text-center p-8">
             <div class="text-6xl mb-4">📖</div>
-            <p class="font-medium text-lg text-gray-700">Select a chapter to start writing</p>
-            <p class="text-sm text-gray-500 mt-2">Your story awaits...</p>
+            <p class="font-medium text-lg theme-text-secondary">
+              Select a chapter to start writing
+            </p>
+            <p class="text-sm theme-text-muted mt-2">Your story awaits...</p>
           </div>
         </div>
       }
     >
       <div class="flex flex-col h-full">
         {/* Enhanced Toolbar */}
-        <div class="p-3 border-b border-gray-200">
+        <div class="p-3 theme-border-secondary border-b">
           <div class="flex items-center justify-between">
             {/* Formatting Tools - Always Available */}
             <div class="flex items-center space-x-1">
-              <span class="text-gray-600 text-xs font-medium mr-2">Format:</span>
+              <span class="theme-text-tertiary text-xs font-medium mr-2">Format:</span>
 
               {/* Text Formatting */}
               <button
                 onClick={() => applyFormat("bold")}
-                class="px-2 py-1 text-xs font-bold border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
+                class="px-2 py-1 text-xs font-bold theme-btn-secondary transition-colors"
                 title="Bold"
               >
                 B
               </button>
               <button
                 onClick={() => applyFormat("italic")}
-                class="px-2 py-1 text-xs italic border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
+                class="px-2 py-1 text-xs italic theme-btn-secondary transition-colors"
                 title="Italic"
               >
                 I
               </button>
               <button
                 onClick={() => applyFormat("strikethrough")}
-                class="px-2 py-1 text-xs border border-gray-300 hover:border-gray-400 transition-colors text-gray-700 line-through"
+                class="px-2 py-1 text-xs theme-btn-secondary transition-colors line-through"
                 title="Strikethrough"
               >
                 S
               </button>
 
-              <div class="w-px h-4 bg-gray-300 mx-1"></div>
+              <div class="w-px h-4 theme-border-primary bg-current mx-1"></div>
 
               {/* Headers */}
               <button
                 onClick={() => applyFormat("h1")}
-                class="px-2 py-1 text-xs font-bold border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
+                class="px-2 py-1 text-xs font-bold theme-btn-secondary transition-colors"
                 title="Heading 1"
               >
                 H1
               </button>
               <button
                 onClick={() => applyFormat("h2")}
-                class="px-2 py-1 text-xs font-semibold border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
+                class="px-2 py-1 text-xs font-semibold theme-btn-secondary transition-colors"
                 title="Heading 2"
               >
                 H2
               </button>
               <button
                 onClick={() => applyFormat("h3")}
-                class="px-2 py-1 text-xs font-medium border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
+                class="px-2 py-1 text-xs font-medium theme-btn-secondary transition-colors"
                 title="Heading 3"
               >
                 H3
               </button>
 
-              <div class="w-px h-4 bg-gray-300 mx-1"></div>
+              <div class="w-px h-4 theme-border-primary bg-current mx-1"></div>
 
               {/* Lists */}
               <button
                 onClick={() => applyFormat("bulletList")}
-                class="px-2 py-1 text-xs border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
+                class="px-2 py-1 text-xs theme-btn-secondary transition-colors"
                 title="Bullet List"
               >
                 •
               </button>
               <button
                 onClick={() => applyFormat("orderedList")}
-                class="px-2 py-1 text-xs border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
+                class="px-2 py-1 text-xs theme-btn-secondary transition-colors"
                 title="Numbered List"
               >
                 1.
               </button>
 
-              <div class="w-px h-4 bg-gray-300 mx-1"></div>
+              <div class="w-px h-4 theme-border-primary bg-current mx-1"></div>
 
               {/* Special Formatting */}
               <button
                 onClick={() => applyFormat("code")}
-                class="px-2 py-1 text-xs font-mono border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
+                class="px-2 py-1 text-xs font-mono theme-btn-secondary transition-colors"
                 title="Inline Code"
               >
                 &lt;/&gt;
               </button>
               <button
                 onClick={() => applyFormat("blockquote")}
-                class="px-2 py-1 text-xs border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
+                class="px-2 py-1 text-xs theme-btn-secondary transition-colors"
                 title="Quote"
               >
                 "
               </button>
               <button
                 onClick={() => applyFormat("link")}
-                class="px-2 py-1 text-xs border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
+                class="px-2 py-1 text-xs theme-btn-secondary transition-colors"
                 title="Link"
               >
                 🔗
               </button>
 
-              <div class="w-px h-4 bg-gray-300 mx-1"></div>
+              <div class="w-px h-4 theme-border-primary bg-current mx-1"></div>
 
               {/* Clear Formatting */}
               <button
                 onClick={() => applyFormat("clear")}
-                class="px-2 py-1 text-xs border border-gray-300 hover:border-gray-400 transition-colors text-gray-600"
+                class="px-2 py-1 text-xs theme-btn-secondary transition-colors"
                 title="Clear Formatting"
               >
                 ✕
@@ -800,7 +803,7 @@ const EditorArea: Component = () => {
             {/* Single Mode Toggle */}
             <button
               onClick={() => setMode(mode() === "write" ? "code" : "write")}
-              class="flex items-center px-3 py-1.5 text-xs font-medium border border-gray-300 hover:border-gray-400 transition-colors text-gray-700"
+              class="flex items-center px-3 py-1.5 text-xs font-medium theme-btn-secondary transition-colors"
               title={mode() === "write" ? "Switch to Code View" : "Switch to Write View"}
             >
               {mode() === "write" ? <>&lt;/&gt; Code</> : <>✏️ Write</>}
@@ -809,14 +812,14 @@ const EditorArea: Component = () => {
         </div>
 
         {/* Editor Area */}
-        <div class="flex-grow overflow-hidden">
+        <div class="flex-grow overflow-hidden flex flex-col">
           <Show
             when={mode() === "write"}
             fallback={
               /* Code Mode - Raw Markdown */
               <textarea
                 ref={textareaRef}
-                class="flex-grow w-full p-4 resize-none font-mono text-sm text-gray-800 leading-relaxed"
+                class="code-editor h-full w-full p-4 resize-none font-mono text-sm theme-text-primary leading-relaxed overflow-auto"
                 placeholder="# Start writing your markdown here..."
                 value={currentContent()}
                 onInput={(e) => setCurrentContent(e.currentTarget.value)}
@@ -838,7 +841,7 @@ const EditorArea: Component = () => {
                 }
               }}
               contentEditable={true}
-              class="flex-grow w-full p-4 resize-none prose prose-lg max-w-none typewriter-text prose-clean text-gray-800 leading-relaxed"
+              class="h-full w-full p-4 resize-none prose prose-lg max-w-none typewriter-text prose-clean theme-text-primary leading-relaxed overflow-auto"
               onInput={handleEditableInput}
               onFocus={() => setIsUserEditing(true)}
               onBlur={() => {
@@ -847,7 +850,6 @@ const EditorArea: Component = () => {
               }}
               style={{
                 "line-height": "1.6em",
-                "min-height": "400px",
                 border: "none",
                 outline: "none",
               }}

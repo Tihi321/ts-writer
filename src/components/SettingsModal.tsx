@@ -3,6 +3,8 @@ import { settingsStore } from "../stores/settingsStore";
 import { googleAuth } from "../services/googleAuth";
 import { indexedDBService } from "../services/indexedDB";
 import { uiStore } from "../stores/uiStore";
+import { getTheme, setTheme, toggleTheme, type Theme } from "../utils/theme";
+import "../styles/themes.css";
 
 const SettingsModal: Component = () => {
   const [isSigningIn, setIsSigningIn] = createSignal(false);
@@ -11,6 +13,7 @@ const SettingsModal: Component = () => {
   const [googleApiKey, setGoogleApiKey] = createSignal("");
   const [isClearing, setIsClearing] = createSignal(false);
   const [activeTab, setActiveTab] = createSignal<"sync" | "editor" | "general" | "api">("sync");
+  const [currentTheme, setCurrentTheme] = createSignal<Theme>(getTheme());
 
   const handleGoogleSignIn = async () => {
     try {
@@ -37,6 +40,11 @@ const SettingsModal: Component = () => {
 
   const handleCloseModal = () => {
     settingsStore.closeSettings();
+  };
+
+  const handleThemeToggle = () => {
+    const newTheme = toggleTheme();
+    setCurrentTheme(newTheme);
   };
 
   // Load API keys on mount
@@ -129,9 +137,7 @@ const SettingsModal: Component = () => {
     <button
       onClick={() => setActiveTab(props.id)}
       class={`flex items-center space-x-2 px-4 py-2 border transition-colors ${
-        activeTab() === props.id
-          ? "border-gray-600 text-gray-800"
-          : "border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
+        activeTab() === props.id ? "theme-btn-primary" : "theme-btn-secondary"
       }`}
     >
       <span class="text-lg">{props.icon}</span>
@@ -142,13 +148,13 @@ const SettingsModal: Component = () => {
   return (
     <Show when={settingsStore.showSettings}>
       <div class="fixed inset-0 z-50">
-        <div class="bg-white w-full h-full overflow-hidden flex flex-col">
+        <div class="theme-bg-secondary w-full h-full overflow-hidden flex flex-col">
           {/* Header */}
-          <div class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 class="text-2xl font-bold text-gray-900">Settings</h2>
+          <div class="flex items-center justify-between p-6 theme-border-secondary border-b">
+            <h2 class="text-2xl font-bold theme-text-primary">Settings</h2>
             <button
               onClick={handleCloseModal}
-              class="text-gray-400 hover:text-gray-600 transition-colors"
+              class="theme-text-muted hover:theme-text-tertiary transition-colors"
             >
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -162,7 +168,7 @@ const SettingsModal: Component = () => {
           </div>
 
           {/* Tabs */}
-          <div class="flex border-b border-gray-200 px-6 pt-4">
+          <div class="flex theme-border-secondary border-b px-6 pt-4">
             <div class="flex space-x-2">
               <TabButton id="sync" label="Sync & Cloud" icon="☁️" />
               <TabButton id="editor" label="Editor" icon="✏️" />
@@ -178,7 +184,7 @@ const SettingsModal: Component = () => {
               <div class="space-y-8">
                 {/* Google Drive Connection */}
                 <div class="space-y-4">
-                  <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <h3 class="text-lg font-semibold theme-text-primary flex items-center">
                     <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -189,17 +195,17 @@ const SettingsModal: Component = () => {
                   </h3>
 
                   <Show when={authError()}>
-                    <div class="border border-gray-400 p-3">
-                      <p class="text-gray-800 text-sm">{authError()}</p>
+                    <div class="theme-alert">
+                      <p class="theme-text-primary text-sm">{authError()}</p>
                     </div>
                   </Show>
 
                   <Show when={!googleAuth.signedIn}>
-                    <div class="border border-gray-300 p-4">
+                    <div class="theme-card p-4">
                       <div class="flex items-start space-x-3">
                         <div class="flex-shrink-0">
                           <svg
-                            class="w-6 h-6 text-gray-600"
+                            class="w-6 h-6 theme-text-tertiary"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -213,12 +219,14 @@ const SettingsModal: Component = () => {
                           </svg>
                         </div>
                         <div class="flex-1">
-                          <h4 class="text-sm font-medium text-gray-900">Connect to Google Drive</h4>
-                          <p class="text-sm text-gray-700 mt-1">
+                          <h4 class="text-sm font-medium theme-text-primary">
+                            Connect to Google Drive
+                          </h4>
+                          <p class="text-sm theme-text-secondary mt-1">
                             Connect your Google account to sync your writing projects across devices
                             and backup to Google Drive.
                           </p>
-                          <ul class="text-xs text-gray-600 mt-2 space-y-1">
+                          <ul class="text-xs theme-text-tertiary mt-2 space-y-1">
                             <li>• Automatic backup to Google Drive</li>
                             <li>• Sync across multiple devices</li>
                             <li>• Access your work anywhere</li>
@@ -229,10 +237,10 @@ const SettingsModal: Component = () => {
                       <button
                         onClick={handleGoogleSignIn}
                         disabled={isSigningIn()}
-                        class="mt-4 w-full border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 disabled:border-gray-400 disabled:text-gray-400 font-medium py-2 px-4 transition-colors duration-200 flex items-center justify-center"
+                        class="mt-4 w-full theme-btn-primary font-medium py-2 px-4 transition-colors duration-200 flex items-center justify-center disabled:opacity-50"
                       >
                         <Show when={isSigningIn()}>
-                          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                          <div class="animate-spin rounded-full h-4 w-4 border-b-2 theme-spinner mr-2"></div>
                         </Show>
                         <Show when={!isSigningIn()}>
                           <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
@@ -260,7 +268,7 @@ const SettingsModal: Component = () => {
                   </Show>
 
                   <Show when={googleAuth.signedIn && googleAuth.currentUser}>
-                    <div class="border border-gray-300 p-4">
+                    <div class="theme-card p-4">
                       <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-3">
                           <img
@@ -269,16 +277,18 @@ const SettingsModal: Component = () => {
                             class="w-10 h-10"
                           />
                           <div>
-                            <h4 class="text-sm font-medium text-gray-900">
+                            <h4 class="text-sm font-medium theme-text-primary">
                               {googleAuth.currentUser!.name}
                             </h4>
-                            <p class="text-sm text-gray-700">{googleAuth.currentUser!.email}</p>
-                            <p class="text-xs text-gray-600">✓ Connected to Google Drive</p>
+                            <p class="text-sm theme-text-secondary">
+                              {googleAuth.currentUser!.email}
+                            </p>
+                            <p class="text-xs theme-text-tertiary">✓ Connected to Google Drive</p>
                           </div>
                         </div>
                         <button
                           onClick={handleGoogleSignOut}
-                          class="text-sm text-gray-700 hover:text-gray-900 underline"
+                          class="text-sm theme-text-secondary hover:theme-text-primary underline"
                         >
                           Disconnect
                         </button>
@@ -289,14 +299,14 @@ const SettingsModal: Component = () => {
 
                 {/* Sync Settings */}
                 <Show when={googleAuth.signedIn}>
-                  <div class="space-y-4 border-t border-gray-200 pt-6">
-                    <h3 class="text-lg font-semibold text-gray-900">Sync Settings</h3>
+                  <div class="space-y-4 theme-border-secondary border-t pt-6">
+                    <h3 class="text-lg font-semibold theme-text-primary">Sync Settings</h3>
 
                     <div class="space-y-4">
                       <label class="flex items-center justify-between">
                         <div class="flex flex-col">
-                          <span class="text-sm font-medium text-gray-700">Auto sign-in</span>
-                          <span class="text-xs text-gray-500">
+                          <span class="text-sm font-medium theme-text-secondary">Auto sign-in</span>
+                          <span class="text-xs theme-text-muted">
                             Automatically sign in to Google Drive on app start
                           </span>
                         </div>
@@ -309,12 +319,12 @@ const SettingsModal: Component = () => {
                           }
                           class={`relative inline-flex h-6 w-11 items-center border transition-colors ${
                             settingsStore.settings.autoSignIn
-                              ? "border-gray-600"
-                              : "border-gray-300"
+                              ? "theme-border-focus"
+                              : "theme-border-primary"
                           }`}
                         >
                           <span
-                            class={`inline-block h-4 w-4 transform border border-gray-400 transition-transform ${
+                            class={`inline-block h-4 w-4 transform theme-border-hover border transition-transform ${
                               settingsStore.settings.autoSignIn ? "translate-x-6" : "translate-x-1"
                             }`}
                           />
@@ -323,10 +333,10 @@ const SettingsModal: Component = () => {
 
                       <label class="flex items-center justify-between">
                         <div class="flex flex-col">
-                          <span class="text-sm font-medium text-gray-700">
+                          <span class="text-sm font-medium theme-text-secondary">
                             Auto-sync with cloud
                           </span>
-                          <span class="text-xs text-gray-500">
+                          <span class="text-xs theme-text-muted">
                             Automatically sync changes to Google Drive
                           </span>
                         </div>
@@ -339,12 +349,12 @@ const SettingsModal: Component = () => {
                           }
                           class={`relative inline-flex h-6 w-11 items-center border transition-colors ${
                             settingsStore.settings.autoSyncEnabled
-                              ? "border-gray-600"
-                              : "border-gray-300"
+                              ? "theme-border-focus"
+                              : "theme-border-primary"
                           }`}
                         >
                           <span
-                            class={`inline-block h-4 w-4 transform border border-gray-400 transition-transform ${
+                            class={`inline-block h-4 w-4 transform theme-border-hover border transition-transform ${
                               settingsStore.settings.autoSyncEnabled
                                 ? "translate-x-6"
                                 : "translate-x-1"
@@ -355,7 +365,9 @@ const SettingsModal: Component = () => {
 
                       <Show when={settingsStore.settings.autoSyncEnabled}>
                         <label class="flex items-center justify-between">
-                          <span class="text-sm font-medium text-gray-700">Auto-sync interval</span>
+                          <span class="text-sm font-medium theme-text-secondary">
+                            Auto-sync interval
+                          </span>
                           <select
                             value={settingsStore.settings.autoSyncInterval}
                             onChange={(e) =>
@@ -364,7 +376,7 @@ const SettingsModal: Component = () => {
                                 parseInt(e.currentTarget.value)
                               )
                             }
-                            class="text-sm border border-gray-300 px-2 py-1"
+                            class="text-sm theme-input px-2 py-1"
                           >
                             <option value={1}>1 minute</option>
                             <option value={5}>5 minutes</option>
@@ -378,8 +390,8 @@ const SettingsModal: Component = () => {
                 </Show>
 
                 {/* Offline Mode */}
-                <div class="space-y-4 border-t border-gray-200 pt-6">
-                  <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                <div class="space-y-4 theme-border-secondary border-t pt-6">
+                  <h3 class="text-lg font-semibold theme-text-primary flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         stroke-linecap="round"
@@ -391,11 +403,11 @@ const SettingsModal: Component = () => {
                     Local Storage
                   </h3>
 
-                  <div class="border border-gray-300 p-4">
+                  <div class="theme-card p-4">
                     <div class="flex items-start space-x-3">
                       <div class="flex-shrink-0">
                         <svg
-                          class="w-6 h-6 text-gray-600"
+                          class="w-6 h-6 theme-text-tertiary"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -409,8 +421,8 @@ const SettingsModal: Component = () => {
                         </svg>
                       </div>
                       <div class="flex-1">
-                        <h4 class="text-sm font-medium text-gray-900">Works Offline</h4>
-                        <p class="text-sm text-gray-600 mt-1">
+                        <h4 class="text-sm font-medium theme-text-primary">Works Offline</h4>
+                        <p class="text-sm theme-text-tertiary mt-1">
                           Your writing is automatically saved to your browser's local storage. You
                           can write even without an internet connection.
                         </p>
@@ -419,15 +431,17 @@ const SettingsModal: Component = () => {
                   </div>
 
                   <label class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">Offline-only mode</span>
+                    <span class="text-sm font-medium theme-text-secondary">Offline-only mode</span>
                     <button
                       onClick={() => settingsStore.toggleOfflineMode()}
                       class={`relative inline-flex h-6 w-11 items-center border transition-colors ${
-                        settingsStore.settings.offlineMode ? "border-gray-600" : "border-gray-300"
+                        settingsStore.settings.offlineMode
+                          ? "theme-border-focus"
+                          : "theme-border-primary"
                       }`}
                     >
                       <span
-                        class={`inline-block h-4 w-4 transform border border-gray-400 transition-transform ${
+                        class={`inline-block h-4 w-4 transform theme-border-hover border transition-transform ${
                           settingsStore.settings.offlineMode ? "translate-x-6" : "translate-x-1"
                         }`}
                       />
@@ -442,7 +456,7 @@ const SettingsModal: Component = () => {
               <div class="space-y-8">
                 {/* Auto-save Section */}
                 <div class="space-y-4">
-                  <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <h3 class="text-lg font-semibold theme-text-primary flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         stroke-linecap="round"
@@ -455,17 +469,19 @@ const SettingsModal: Component = () => {
                   </h3>
 
                   <label class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-gray-700">Enable auto-save</span>
+                    <span class="text-sm font-medium theme-text-secondary">Enable auto-save</span>
                     <button
                       onClick={() =>
                         settingsStore.updateSetting("autoSave", !settingsStore.settings.autoSave)
                       }
                       class={`relative inline-flex h-6 w-11 items-center border transition-colors ${
-                        settingsStore.settings.autoSave ? "border-gray-600" : "border-gray-300"
+                        settingsStore.settings.autoSave
+                          ? "theme-border-focus"
+                          : "theme-border-primary"
                       }`}
                     >
                       <span
-                        class={`inline-block h-4 w-4 transform border border-gray-400 transition-transform ${
+                        class={`inline-block h-4 w-4 transform theme-border-hover border transition-transform ${
                           settingsStore.settings.autoSave ? "translate-x-6" : "translate-x-1"
                         }`}
                       />
@@ -474,7 +490,9 @@ const SettingsModal: Component = () => {
 
                   <Show when={settingsStore.settings.autoSave}>
                     <label class="flex items-center justify-between">
-                      <span class="text-sm font-medium text-gray-700">Auto-save interval</span>
+                      <span class="text-sm font-medium theme-text-secondary">
+                        Auto-save interval
+                      </span>
                       <select
                         value={settingsStore.settings.autoSaveInterval}
                         onChange={(e) =>
@@ -483,7 +501,7 @@ const SettingsModal: Component = () => {
                             parseInt(e.currentTarget.value)
                           )
                         }
-                        class="text-sm border border-gray-300 px-2 py-1"
+                        class="text-sm theme-input px-2 py-1"
                       >
                         <option value={10}>10 seconds</option>
                         <option value={30}>30 seconds</option>
@@ -495,24 +513,24 @@ const SettingsModal: Component = () => {
                 </div>
 
                 {/* Zen Mode */}
-                <div class="space-y-4 border-t border-gray-200 pt-6">
-                  <h3 class="text-lg font-semibold text-gray-900">Writing Experience</h3>
+                <div class="space-y-4 theme-border-secondary border-t pt-6">
+                  <h3 class="text-lg font-semibold theme-text-primary">Writing Experience</h3>
 
                   <label class="flex items-center justify-between">
                     <div class="flex flex-col">
-                      <span class="text-sm font-medium text-gray-700">Zen Mode</span>
-                      <span class="text-xs text-gray-500">
+                      <span class="text-sm font-medium theme-text-secondary">Zen Mode</span>
+                      <span class="text-xs theme-text-muted">
                         Hide all panels for distraction-free writing
                       </span>
                     </div>
                     <button
                       onClick={() => uiStore.toggleZenMode()}
                       class={`relative inline-flex h-6 w-11 items-center border transition-colors ${
-                        uiStore.isZenMode() ? "border-gray-600" : "border-gray-300"
+                        uiStore.isZenMode() ? "theme-border-focus" : "theme-border-primary"
                       }`}
                     >
                       <span
-                        class={`inline-block h-4 w-4 transform border border-gray-400 transition-transform ${
+                        class={`inline-block h-4 w-4 transform theme-border-hover border transition-transform ${
                           uiStore.isZenMode() ? "translate-x-6" : "translate-x-1"
                         }`}
                       />
@@ -525,15 +543,62 @@ const SettingsModal: Component = () => {
             {/* General Tab */}
             <Show when={activeTab() === "general"}>
               <div class="space-y-8">
+                {/* Appearance */}
+                <div class="space-y-4">
+                  <h3 class="text-lg font-semibold theme-text-primary flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"
+                      />
+                    </svg>
+                    Appearance
+                  </h3>
+
+                  <label class="flex items-center justify-between">
+                    <div class="flex flex-col">
+                      <span class="text-sm font-medium theme-text-secondary">Dark Theme</span>
+                      <span class="text-xs theme-text-muted">
+                        Switch between light and dark appearance
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleThemeToggle}
+                      class={`relative inline-flex h-6 w-11 items-center border transition-colors ${
+                        currentTheme() === "dark" ? "theme-border-focus" : "theme-border-primary"
+                      }`}
+                    >
+                      <span
+                        class={`inline-block h-4 w-4 transform theme-border-hover border transition-transform ${
+                          currentTheme() === "dark" ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </label>
+
+                  <div class="flex items-center space-x-4 text-sm theme-text-tertiary">
+                    <div class="flex items-center space-x-2">
+                      <div class="w-4 h-4 theme-border-primary border theme-bg-secondary rounded-sm"></div>
+                      <span>Light</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <div class="w-4 h-4 border border-gray-600 bg-gray-800 rounded-sm"></div>
+                      <span>Dark</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Data Management */}
-                <div class="space-y-4 border-t border-gray-200 pt-6">
-                  <h3 class="text-lg font-semibold text-gray-900">Data Management</h3>
+                <div class="space-y-4 theme-border-secondary border-t pt-6">
+                  <h3 class="text-lg font-semibold theme-text-primary">Data Management</h3>
 
                   <div class="space-y-3">
                     <button
                       onClick={handleClearBooks}
                       disabled={isClearing()}
-                      class="w-full border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 disabled:border-gray-400 disabled:text-gray-400 font-medium py-2 px-4 transition-colors duration-200"
+                      class="w-full theme-btn-primary font-medium py-2 px-4 transition-colors duration-200 disabled:opacity-50"
                     >
                       {isClearing() ? "Clearing..." : "Clear All Books"}
                     </button>
@@ -541,7 +606,7 @@ const SettingsModal: Component = () => {
                     <button
                       onClick={handleClearConfig}
                       disabled={isClearing()}
-                      class="w-full border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 disabled:border-gray-400 disabled:text-gray-400 font-medium py-2 px-4 transition-colors duration-200"
+                      class="w-full theme-btn-primary font-medium py-2 px-4 transition-colors duration-200 disabled:opacity-50"
                     >
                       {isClearing() ? "Clearing..." : "Clear All Configuration"}
                     </button>
@@ -555,7 +620,7 @@ const SettingsModal: Component = () => {
               <div class="space-y-8">
                 {/* Google API Configuration Section */}
                 <div class="space-y-4">
-                  <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                  <h3 class="text-lg font-semibold theme-text-primary flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         stroke-linecap="round"
@@ -567,11 +632,11 @@ const SettingsModal: Component = () => {
                     Google API Configuration
                   </h3>
 
-                  <div class="border border-gray-400 p-4">
+                  <div class="theme-alert">
                     <div class="flex items-start space-x-3">
                       <div class="flex-shrink-0">
                         <svg
-                          class="w-6 h-6 text-gray-600"
+                          class="w-6 h-6 theme-text-tertiary"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -585,10 +650,10 @@ const SettingsModal: Component = () => {
                         </svg>
                       </div>
                       <div class="flex-1">
-                        <h4 class="text-sm font-medium text-gray-900">
+                        <h4 class="text-sm font-medium theme-text-primary">
                           API Keys Required for Google Drive Sync
                         </h4>
-                        <p class="text-sm text-gray-700 mt-1">
+                        <p class="text-sm theme-text-secondary mt-1">
                           To enable Google Drive sync, you need to provide your own Google API
                           credentials. Visit the Google Cloud Console to create a project and get
                           your API keys.
@@ -599,7 +664,7 @@ const SettingsModal: Component = () => {
 
                   <div class="space-y-3">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                      <label class="block text-sm font-medium theme-text-secondary mb-1">
                         Google Client ID
                       </label>
                       <input
@@ -607,12 +672,12 @@ const SettingsModal: Component = () => {
                         value={googleClientId()}
                         onInput={(e) => setGoogleClientId(e.currentTarget.value)}
                         placeholder="your-client-id.apps.googleusercontent.com"
-                        class="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-gray-500"
+                        class="w-full px-3 py-2 theme-input"
                       />
                     </div>
 
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">
+                      <label class="block text-sm font-medium theme-text-secondary mb-1">
                         Google API Key
                       </label>
                       <input
@@ -620,13 +685,13 @@ const SettingsModal: Component = () => {
                         value={googleApiKey()}
                         onInput={(e) => setGoogleApiKey(e.currentTarget.value)}
                         placeholder="Your Google API Key"
-                        class="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-gray-500"
+                        class="w-full px-3 py-2 theme-input"
                       />
                     </div>
 
                     <button
                       onClick={handleSaveApiKeys}
-                      class="border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 font-medium py-2 px-4 transition-colors duration-200"
+                      class="theme-btn-primary font-medium py-2 px-4 transition-colors duration-200"
                     >
                       Save API Keys
                     </button>
@@ -637,16 +702,16 @@ const SettingsModal: Component = () => {
           </div>
 
           {/* Footer */}
-          <div class="flex items-center justify-between p-6 border-t border-gray-200">
+          <div class="flex items-center justify-between p-6 theme-border-secondary border-t">
             <button
               onClick={() => settingsStore.resetToDefaults()}
-              class="text-sm text-gray-600 hover:text-gray-800 underline"
+              class="text-sm theme-text-tertiary hover:theme-text-secondary underline"
             >
               Reset to Defaults
             </button>
             <button
               onClick={handleCloseModal}
-              class="border border-gray-600 text-gray-800 hover:text-gray-900 hover:border-gray-700 font-medium py-2 px-4 transition-colors duration-200"
+              class="theme-btn-primary font-medium py-2 px-4 transition-colors duration-200"
             >
               Done
             </button>

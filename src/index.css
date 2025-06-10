@@ -1,3 +1,6 @@
+/* Import theme variables */
+@import './styles/themes.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,7 +11,12 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc; /* Clean light grey background */
+  background-color: var(--bg-secondary);
+}
+
+/* Set default theme */
+body {
+  data-theme: light;
 }
 
 #root {
@@ -38,19 +46,19 @@ body {
 .typewriter-cursor::after {
   content: '|';
   animation: blink 1s infinite;
-  color: #6b7280;
+  color: var(--text-tertiary);
   font-weight: 100;
 }
 
 /* Clean prose styles */
 .prose-clean {
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .prose-clean h1 {
   font-family: 'Inter', sans-serif;
-  color: #111827;
-  border-bottom: 2px solid #e5e7eb;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-secondary);
   padding-bottom: 0.5rem;
   margin-bottom: 1.5rem;
   font-weight: 700;
@@ -58,8 +66,8 @@ body {
 
 .prose-clean h2 {
   font-family: 'Inter', sans-serif;
-  color: #1f2937;
-  border-bottom: 1px solid #f3f4f6;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-secondary);
   padding-bottom: 0.25rem;
   font-weight: 600;
 }
@@ -69,7 +77,7 @@ body {
 .prose-clean h5,
 .prose-clean h6 {
   font-family: 'Inter', sans-serif;
-  color: #1f2937;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -77,22 +85,22 @@ body {
   font-family: 'Courier Prime', 'Courier New', monospace;
   line-height: 1.7;
   margin-bottom: 1.25rem;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .prose-clean strong {
-  color: #111827;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
 .prose-clean em {
-  color: #4b5563;
+  color: var(--text-tertiary);
   font-style: italic;
 }
 
 .prose-clean code {
-  background-color: #f3f4f6;
-  color: #374151;
+  background-color: var(--bg-hover);
+  color: var(--text-secondary);
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-family: 'JetBrains Mono', 'Courier Prime', monospace;
@@ -100,8 +108,8 @@ body {
 }
 
 .prose-clean pre {
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
   border-radius: 0.5rem;
   padding: 1rem;
   overflow-x: auto;
@@ -113,12 +121,12 @@ body {
 }
 
 .prose-clean blockquote {
-  border-left: 4px solid #d1d5db;
-  background-color: #f9fafb;
+  border-left: 4px solid var(--border-primary);
+  background-color: var(--bg-secondary);
   padding: 1rem;
   margin: 1.5rem 0;
   font-style: italic;
-  color: #4b5563;
+  color: var(--text-tertiary);
 }
 
 .prose-clean ul,
@@ -133,13 +141,18 @@ body {
 }
 
 .prose-clean a {
-  color: #3b82f6;
+  color: var(--accent-primary);
   text-decoration: underline;
-  text-decoration-color: #93c5fd;
+  text-decoration-color: var(--text-muted);
   text-underline-offset: 2px;
 }
 
 .prose-clean a:hover {
-  color: #2563eb;
-  text-decoration-color: #60a5fa;
-} 
+  color: var(--accent-hover);
+  text-decoration-color: var(--text-tertiary);
+}
+
+.code-editor {
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+}

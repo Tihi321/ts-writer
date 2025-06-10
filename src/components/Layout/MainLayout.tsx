@@ -10,7 +10,7 @@ interface MainLayoutProps {
 
 const MainLayout: Component<MainLayoutProps> = (props) => {
   return (
-    <div class="flex h-full transition-all duration-300 bg-white">
+    <div class="flex h-full transition-all duration-300">
       {/* Chapters Panel (Left) */}
       <Show when={uiStore.showChapters()}>
         <aside class="w-1/4 p-4 border-r border-gray-300 overflow-y-auto transition-all duration-300">
