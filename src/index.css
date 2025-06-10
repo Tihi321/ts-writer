@@ -156,3 +156,11 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-primary);
 }
+
+.writing-editor {
+  max-height: 100%;
+}
+
+.writing-editor-container {
+  max-height: 100%;
+}

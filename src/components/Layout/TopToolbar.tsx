@@ -3,6 +3,7 @@ import { Show, createSignal, createEffect, onCleanup } from "solid-js";
 import { bookStore } from "@stores/bookStore";
 import { settingsStore } from "@stores/settingsStore";
 import { uiStore } from "@stores/uiStore";
+import { editorStore } from "@stores/editorStore";
 import SyncStatusComponent from "../SyncStatus";
 import { googleAuth } from "../../services/googleAuth";
 import BookManagementModal from "../Book/BookManagementModal";
@@ -336,6 +337,54 @@ const TopToolbar: Component = () => {
                   />
                 </svg>
               </button>
+
+              <div class="w-px h-4 theme-border-primary bg-current"></div>
+
+              {/* Editor Controls - Text Size and Mode */}
+              <div class="flex items-center space-x-2">
+                {/* Text Size */}
+                <div class="flex items-center space-x-1">
+                  <span class="theme-text-tertiary text-xs font-medium">Size:</span>
+                  <button
+                    onClick={() => editorStore.setTextSize(50)}
+                    class={`px-2 py-1 text-xs border transition-all duration-200 ${
+                      editorStore.textSize() === 50 ? "theme-btn-primary" : "theme-btn-secondary"
+                    }`}
+                    title="Small (50%)"
+                  >
+                    S
+                  </button>
+                  <button
+                    onClick={() => editorStore.setTextSize(75)}
+                    class={`px-2 py-1 text-xs border transition-all duration-200 ${
+                      editorStore.textSize() === 75 ? "theme-btn-primary" : "theme-btn-secondary"
+                    }`}
+                    title="Medium (75%)"
+                  >
+                    M
+                  </button>
+                  <button
+                    onClick={() => editorStore.setTextSize(100)}
+                    class={`px-2 py-1 text-xs border transition-all duration-200 ${
+                      editorStore.textSize() === 100 ? "theme-btn-primary" : "theme-btn-secondary"
+                    }`}
+                    title="Large (100%)"
+                  >
+                    L
+                  </button>
+                </div>
+
+                {/* Editor Mode Toggle */}
+                <button
+                  onClick={() => editorStore.toggleMode()}
+                  class="flex items-center px-3 py-1.5 text-xs font-medium border theme-btn-secondary transition-all duration-200"
+                  title={
+                    editorStore.mode() === "write" ? "Switch to Code View" : "Switch to Write View"
+                  }
+                >
+                  {editorStore.mode() === "write" ? <>&lt;/&gt; Code</> : <>✏️ Write</>}
+                </button>
+              </div>
 
               <div class="w-px h-4 theme-border-primary bg-current"></div>
             </Show>
