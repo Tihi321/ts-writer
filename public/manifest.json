@@ -4,7 +4,7 @@
   "description": "A powerful markdown editor designed for writers",
   "start_url": "/",
   "display": "fullscreen",
-  "orientation": "portrait",
+  "orientation": "landscape",
   "theme_color": "#000000",
   "background_color": "#ffffff",
   "scope": "/",
