@@ -11,6 +11,7 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "baseUrl": ".",
+    "types": ["vite/client"],
     "paths": {
       "@/*": ["src/*"],
       "@components/*": ["src/components/*"],

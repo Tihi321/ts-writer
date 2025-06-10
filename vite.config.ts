@@ -20,4 +20,6 @@ export default defineConfig({
       "@config": fileURLToPath(new URL("./src/config", import.meta.url)),
     },
   },
+  // Copy service worker to public directory during build
+  publicDir: "public",
 });
