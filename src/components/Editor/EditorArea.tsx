@@ -22,7 +22,6 @@ const EditorArea: Component = () => {
     const chapter = chapterStore.selectedChapter();
     if (chapter) {
       setCurrentContent(chapter.content);
-      setMode("write");
     } else {
       setCurrentContent("");
     }
@@ -582,10 +581,128 @@ const EditorArea: Component = () => {
     const target = e.target as HTMLDivElement;
     setIsUserEditing(true);
 
-    // Convert HTML back to markdown - this is simplified
-    // In a real app, you'd want a proper HTML to markdown converter
-    const text = target.innerText || "";
-    setCurrentContent(text);
+    // Convert HTML back to markdown using a proper converter
+    const markdown = htmlToMarkdown(target.innerHTML);
+    setCurrentContent(markdown);
+  };
+
+  // Convert HTML back to markdown - proper implementation
+  const htmlToMarkdown = (html: string): string => {
+    // Create a temporary div to parse HTML
+    const temp = document.createElement("div");
+    temp.innerHTML = html;
+
+    // Helper function to process text nodes and maintain markdown formatting
+    const processNode = (node: Node): string => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return node.textContent || "";
+      }
+
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as Element;
+        const tagName = element.tagName.toLowerCase();
+        const children = Array.from(element.childNodes).map(processNode).join("");
+
+        switch (tagName) {
+          case "h1":
+            return `# ${children}\n\n`;
+          case "h2":
+            return `## ${children}\n\n`;
+          case "h3":
+            return `### ${children}\n\n`;
+          case "h4":
+            return `#### ${children}\n\n`;
+          case "h5":
+            return `##### ${children}\n\n`;
+          case "h6":
+            return `###### ${children}\n\n`;
+
+          case "strong":
+          case "b":
+            return `**${children}**`;
+
+          case "em":
+          case "i":
+            return `*${children}*`;
+
+          case "del":
+          case "s":
+            return `~~${children}~~`;
+
+          case "code":
+            // Only wrap with backticks if it's not already wrapped
+            if (!children.startsWith("`") && !children.endsWith("`")) {
+              return `\`${children}\``;
+            }
+            return children;
+
+          case "pre":
+            // Handle code blocks
+            const codeElement = element.querySelector("code");
+            if (codeElement) {
+              return `\n\`\`\`\n${codeElement.textContent || ""}\n\`\`\`\n\n`;
+            }
+            return `\n\`\`\`\n${children}\n\`\`\`\n\n`;
+
+          case "blockquote":
+            return (
+              children
+                .split("\n")
+                .map((line) => (line.trim() ? `> ${line}` : ">"))
+                .join("\n") + "\n\n"
+            );
+
+          case "ul":
+            return children + "\n";
+
+          case "ol":
+            return children + "\n";
+
+          case "li":
+            const parent = element.parentElement;
+            if (parent?.tagName.toLowerCase() === "ol") {
+              // For ordered lists, we need to find the index
+              const siblings = Array.from(parent.children);
+              const index = siblings.indexOf(element) + 1;
+              return `${index}. ${children}\n`;
+            } else {
+              // Unordered list
+              return `- ${children}\n`;
+            }
+
+          case "a":
+            const href = element.getAttribute("href");
+            if (href) {
+              return `[${children}](${href})`;
+            }
+            return children;
+
+          case "br":
+            return "\n";
+
+          case "p":
+            return `${children}\n\n`;
+
+          case "div":
+            // For div elements, just return children with proper spacing
+            return children + (children.endsWith("\n") ? "" : "\n");
+
+          default:
+            // For unknown elements, just return the children
+            return children;
+        }
+      }
+
+      return "";
+    };
+
+    const markdown = processNode(temp);
+
+    // Clean up extra newlines and whitespace
+    return markdown
+      .replace(/\n{3,}/g, "\n\n") // Replace 3+ newlines with 2
+      .replace(/^\n+|\n+$/g, "") // Remove leading/trailing newlines
+      .trim();
   };
 
   // Save and restore cursor position
