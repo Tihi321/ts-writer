@@ -809,10 +809,15 @@ const EditorArea: Component = () => {
         {/* Dynamic paragraph padding style */}
         <style>{`.prose-clean p { padding-bottom: ${editorStore.paddingSize()} !important; }`}</style>
         <div
-          style={{
-            width: `${editorStore.textSize()}%`,
-            "max-width": editorStore.textSize() === 100 ? "none" : `${editorStore.textSize()}%`,
-          }}
+          style={
+            editorStore.textSize() === "960px"
+              ? { width: "100%", "max-width": "960px" }
+              : {
+                  width: `${editorStore.textSize()}%`,
+                  "max-width":
+                    editorStore.textSize() === 100 ? "none" : `${editorStore.textSize()}%`,
+                }
+          }
           class="flex flex-col h-full"
         >
           {/* Enhanced Toolbar */}

@@ -305,6 +305,27 @@ const TopToolbar: Component = () => {
 
               {/* Editor Controls - Text Size and Mode */}
               <div class="flex items-center space-x-2">
+                {/* Editor Size Dropdown */}
+                <label class="text-xs theme-text-tertiary mr-1" for="editor-size-select">
+                  Editor Size:
+                </label>
+                <select
+                  id="editor-size-select"
+                  class="px-2 py-1 text-xs border theme-btn-secondary rounded transition-all duration-200"
+                  value={editorStore.textSize()}
+                  onInput={(e) => {
+                    const val = e.currentTarget.value;
+                    if (val === "960px") editorStore.setTextSize("960px");
+                    else editorStore.setTextSize(Number(val) as 50 | 75 | 100);
+                  }}
+                  style={{ width: "auto" }}
+                  title="Set editor width"
+                >
+                  <option value={50}>50%</option>
+                  <option value={75}>75%</option>
+                  <option value={100}>100%</option>
+                  <option value="960px">960px (max, responsive)</option>
+                </select>
                 {/* Editor Mode Toggle */}
                 <button
                   onClick={() => editorStore.toggleMode()}

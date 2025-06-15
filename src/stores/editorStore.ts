@@ -1,7 +1,7 @@
 import { createSignal } from "solid-js";
 
 export type EditorMode = "write" | "code";
-export type TextSize = 50 | 75 | 100;
+export type TextSize = 50 | 75 | 100 | "960px";
 export type FontSize = 14 | 16 | 18;
 export type PaddingSize = "0.5em" | "1em" | "1.5em";
 
@@ -11,6 +11,7 @@ const TEXT_SIZE_KEY = "tswriter-textSize";
 function loadTextSize(): TextSize {
   const stored = localStorage.getItem(TEXT_SIZE_KEY);
   if (stored === "50" || stored === "75" || stored === "100") return Number(stored) as TextSize;
+  if (stored === "960px") return "960px";
   return 100;
 }
 
