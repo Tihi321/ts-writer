@@ -196,4 +196,41 @@ body[data-theme="dark"],
 .theme-spinner {
   border-color: var(--border-secondary);
   border-bottom-color: var(--border-focus);
+}
+
+/* Custom Scrollbar Styles */
+body[data-theme="light"] ::-webkit-scrollbar, .theme-light ::-webkit-scrollbar {
+  width: 12px;
+  background: var(--bg-secondary);
+}
+body[data-theme="light"] ::-webkit-scrollbar-thumb, .theme-light ::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 8px;
+  border: 3px solid var(--bg-secondary);
+}
+body[data-theme="light"] ::-webkit-scrollbar-thumb:hover, .theme-light ::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
+
+body[data-theme="dark"] ::-webkit-scrollbar, .theme-dark ::-webkit-scrollbar {
+  width: 12px;
+  background: var(--bg-secondary);
+}
+body[data-theme="dark"] ::-webkit-scrollbar-thumb, .theme-dark ::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 8px;
+  border: 3px solid var(--bg-secondary);
+}
+body[data-theme="dark"] ::-webkit-scrollbar-thumb:hover, .theme-dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
+
+/* For Firefox */
+body[data-theme="light"], .theme-light {
+  scrollbar-color: var(--border-primary) var(--bg-secondary);
+  scrollbar-width: thin;
+}
+body[data-theme="dark"], .theme-dark {
+  scrollbar-color: var(--border-primary) var(--bg-secondary);
+  scrollbar-width: thin;
 } 
