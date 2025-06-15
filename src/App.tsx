@@ -36,7 +36,7 @@ const App: Component = () => {
 
   return (
     <DragDropProvider>
-      <div class="flex flex-col h-screen theme-bg-primary">
+      <div class="theme-bg-primary">
         {/* Settings Modal */}
         <SettingsModal />
 
@@ -44,7 +44,7 @@ const App: Component = () => {
         <TopToolbar />
 
         {/* Add padding-top to account for fixed toolbar */}
-        <div class="pt-12 flex flex-col flex-grow">
+        <div class="pt-12 flex flex-col h-screen">
           <div class="flex-grow overflow-hidden">
             <Show when={bookStore.selectedBook()} fallback={<BookList />}>
               <MainLayout
