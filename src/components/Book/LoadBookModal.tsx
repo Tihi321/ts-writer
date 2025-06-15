@@ -44,19 +44,6 @@ const LoadBookModal: Component<LoadBookModalProps> = (props) => {
     }
   };
 
-  const getSourceBadgeClass = (source: BookSummary["source"]) => {
-    switch (source) {
-      case "local":
-        return "border border-gray-300 text-gray-700";
-      case "cloud":
-        return "border border-gray-300 text-gray-700";
-      case "imported":
-        return "border border-gray-300 text-gray-700";
-      default:
-        return "border border-gray-300 text-gray-700";
-    }
-  };
-
   return (
     <Show when={props.isOpen}>
       <div class="fixed inset-0 z-50">
@@ -80,7 +67,7 @@ const LoadBookModal: Component<LoadBookModalProps> = (props) => {
           </div>
 
           {/* Content */}
-          <div class="p-6 flex-1 overflow-y-auto">
+          <div class="p-6 flex flex-1 overflow-y-auto">
             <Show
               when={bookStore.books().length > 0}
               fallback={
@@ -93,11 +80,11 @@ const LoadBookModal: Component<LoadBookModalProps> = (props) => {
                 </div>
               }
             >
-              <div class="space-y-2">
+              <div class="flex-1 flex flex-col space-y-2">
                 <label class="block text-sm font-medium theme-text-secondary mb-3">
                   Select a book to open:
                 </label>
-                <div class="max-h-64 overflow-y-auto space-y-2">
+                <div class="flex-1 overflow-y-auto space-y-2">
                   <For each={bookStore.books()}>
                     {(book) => (
                       <button

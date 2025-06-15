@@ -204,44 +204,7 @@ const TopToolbar: Component = () => {
                   </span>
                 </Show>
 
-                {/* Pull Button - Always show when book is selected */}
-                <button
-                  onClick={() => handleSyncBook("pull")}
-                  disabled={
-                    syncing() || !settingsStore.settings.googleSyncEnabled || !googleAuth.signedIn
-                  }
-                  class="p-1.5 theme-btn-secondary transition-all duration-200 disabled:opacity-50"
-                  title="Pull from Cloud (overwrite local with cloud)"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
-                    />
-                  </svg>
-                </button>
-
-                {/* Push Button - Always show when book is selected */}
-                <button
-                  onClick={() => handleSyncBook("push")}
-                  disabled={
-                    syncing() || !settingsStore.settings.googleSyncEnabled || !googleAuth.signedIn
-                  }
-                  class="p-1.5 theme-btn-secondary transition-all duration-200 disabled:opacity-50"
-                  title="Push to Cloud (overwrite cloud with local)"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                    />
-                  </svg>
-                </button>
-
+                {/* Remove Pull and Push Buttons - Only keep Manage Books */}
                 <div class="w-px h-4 theme-border-primary bg-current"></div>
 
                 <button

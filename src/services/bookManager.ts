@@ -2,7 +2,7 @@ import { indexedDBService, BookEntry, BookConfig, CloudBooksIndex, BookInfo } fr
 import { googleDriveService } from "./googleDrive";
 import { googleAuth } from "./googleAuth";
 
-export type BookSource = "local" | "cloud" | "imported";
+export type BookSource = "local" | "cloud";
 export type SyncStatus = "in_sync" | "out_of_sync" | "local_only" | "cloud_only";
 
 export interface BookSummary {
@@ -99,7 +99,7 @@ class BookManagerService {
 
   async listCloudBooks(): Promise<BookSummary[]> {
     const books = await this.listBooks();
-    return books.filter((book) => book.source === "cloud" || book.source === "imported");
+    return books.filter((book) => book.source === "cloud");
   }
 
   async listOutOfSyncBooks(): Promise<BookSummary[]> {
@@ -138,9 +138,9 @@ class BookManagerService {
         return [];
       }
 
-      // Get list of locally imported books to mark availability
-      const localBooks = await this.listBooks();
-      const localBookIds = new Set(localBooks.map((book) => book.id));
+      // Get list of cloud books to mark availability
+      const cloudBooks = await this.listBooks();
+      const cloudBookIds = new Set(cloudBooks.map((book) => book.id));
 
       return Object.entries(cloudIndex.books).map(([bookId, bookData]) => ({
         id: bookId,
@@ -148,7 +148,7 @@ class BookManagerService {
         folderPath: bookData.folderPath,
         lastModified: bookData.lastModified,
         version: bookData.version,
-        available: !localBookIds.has(bookId), // Available if not already imported
+        available: !cloudBookIds.has(bookId), // Available if not already present in cloud
       }));
     } catch (error) {
       console.error("Failed to get available cloud books:", error);
@@ -182,7 +182,7 @@ class BookManagerService {
       const bookEntry: BookEntry = {
         id: cloudBookId,
         name: bookInfo.name,
-        source: "imported",
+        source: "cloud",
         syncStatus: "in_sync",
         config: bookInfo.config,
         localLastModified: bookInfo.lastModified,
@@ -380,8 +380,8 @@ class BookManagerService {
     book.name = newName;
     book.localLastModified = Date.now();
 
-    // Update sync status if it's a cloud/imported book
-    if (book.source === "imported" || book.source === "cloud") {
+    // Update sync status if it's a cloud book
+    if (book.source === "cloud") {
       book.syncStatus = "out_of_sync";
     }
 
@@ -393,7 +393,6 @@ class BookManagerService {
     total: number;
     local: number;
     cloud: number;
-    imported: number;
     outOfSync: number;
   }> {
     const books = await this.listBooks();
@@ -402,7 +401,6 @@ class BookManagerService {
       total: books.length,
       local: books.filter((b) => b.source === "local").length,
       cloud: books.filter((b) => b.source === "cloud").length,
-      imported: books.filter((b) => b.source === "imported").length,
       outOfSync: books.filter((b) => b.syncStatus === "out_of_sync").length,
     };
   }

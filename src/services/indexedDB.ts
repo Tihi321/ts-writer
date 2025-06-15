@@ -27,7 +27,7 @@ export interface BookInfo {
 export interface BookEntry {
   id: string;
   name: string;
-  source: "local" | "cloud" | "imported";
+  source: "local" | "cloud";
   syncStatus: "in_sync" | "out_of_sync" | "local_only" | "cloud_only";
   config: BookConfig;
   localLastModified: number;
@@ -156,7 +156,7 @@ class IndexedDBService {
 
   async listCloudBooks(): Promise<BookEntry[]> {
     const books = await this.listBooks();
-    return books.filter((book) => book.source === "cloud" || book.source === "imported");
+    return books.filter((book) => book.source === "cloud");
   }
 
   async getBook(bookId: string): Promise<BookEntry | null> {
@@ -216,7 +216,7 @@ class IndexedDBService {
     book.localLastModified = Date.now();
 
     // Update sync status based on source
-    if (book.source === "imported" || book.source === "cloud") {
+    if (book.source === "cloud") {
       book.syncStatus = "out_of_sync";
     }
 
@@ -291,7 +291,7 @@ class IndexedDBService {
     if (book) {
       book.localLastModified = now;
       // Only mark as out of sync if this is not a sync operation
-      if (!isSync && (book.source === "imported" || book.source === "cloud")) {
+      if (!isSync && book.source === "cloud") {
         book.syncStatus = "out_of_sync";
       }
       await this.saveBook(book);

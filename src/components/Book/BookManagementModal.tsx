@@ -3,6 +3,7 @@ import { bookStore } from "../../stores/bookStore";
 import { bookService } from "../../services/bookService";
 import { BookSummary, CloudBookInfo } from "../../services/bookManager";
 import "../../styles/themes.css";
+import { exportBookToFolder, importBookFromFolder } from "../../utils/fileSystem";
 
 interface BookManagementModalProps {
   isOpen: boolean;
@@ -248,8 +249,8 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                   <Show when={book.source !== "local"}>
                     <hr class="my-1" />
                     <button
-                      onClick={() => {
-                        handleSyncBook(book, "pull");
+                      onClick={async () => {
+                        await handleSyncBook(book, "pull");
                         setShowMenu(false);
                       }}
                       class="block w-full text-left px-4 py-2 text-sm theme-menu-item"
@@ -257,8 +258,8 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                       ⬇️ Pull from Cloud
                     </button>
                     <button
-                      onClick={() => {
-                        handleSyncBook(book, "push");
+                      onClick={async () => {
+                        await handleSyncBook(book, "push");
                         setShowMenu(false);
                       }}
                       class="block w-full text-left px-4 py-2 text-sm theme-menu-item"
@@ -270,13 +271,18 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
                   <Show when={book.source === "local"}>
                     <hr class="my-1" />
                     <button
-                      onClick={() => {
-                        handleSyncBook(book, "push");
+                      onClick={async () => {
+                        try {
+                          await exportBookToFolder(book.id);
+                          alert("Export complete!");
+                        } catch (e) {
+                          alert("Export failed: " + (e instanceof Error ? e.message : e));
+                        }
                         setShowMenu(false);
                       }}
                       class="block w-full text-left px-4 py-2 text-sm theme-menu-item"
                     >
-                      ⬆️ Export to Cloud
+                      📤 Export to Folder
                     </button>
                   </Show>
 
@@ -397,12 +403,28 @@ const BookManagementModal: Component<BookManagementModalProps> = (props) => {
               <div class="space-y-4">
                 <div class="flex items-center justify-between">
                   <h3 class="text-lg font-semibold theme-text-primary">Local Books</h3>
-                  <button
-                    onClick={() => setShowCreateForm(true)}
-                    class="px-4 py-2 theme-btn-primary text-sm"
-                  >
-                    ➕ New Book
-                  </button>
+                  <div class="flex gap-2">
+                    <button
+                      class="px-3 py-1 theme-btn-secondary border rounded"
+                      onClick={() => setShowCreateForm(true)}
+                    >
+                      + New Book
+                    </button>
+                    <button
+                      class="px-3 py-1 theme-btn-secondary border rounded"
+                      onClick={async () => {
+                        try {
+                          await importBookFromFolder();
+                          await loadBooks();
+                          alert("Import complete!");
+                        } catch (e) {
+                          alert("Import failed: " + (e instanceof Error ? e.message : e));
+                        }
+                      }}
+                    >
+                      Import from Folder
+                    </button>
+                  </div>
                 </div>
 
                 <Show when={showCreateForm()}>

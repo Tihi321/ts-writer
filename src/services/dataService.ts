@@ -156,7 +156,7 @@ class DataService {
             // Export local books to cloud
             await bookManagerService.exportBookToCloud(book.id);
           } else {
-            // Push changes for cloud/imported books
+            // Push changes for cloud books
             await bookManagerService.syncBookWithCloud(book.id, "push");
           }
         } catch (error) {
@@ -194,7 +194,7 @@ class DataService {
         }
       }
 
-      // Sync existing cloud/imported books
+      // Sync existing cloud books
       const cloudBooks = await bookManagerService.listCloudBooks();
       for (const book of cloudBooks) {
         if (book.syncStatus === "out_of_sync") {
