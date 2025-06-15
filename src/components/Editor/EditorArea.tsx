@@ -806,6 +806,8 @@ const EditorArea: Component = () => {
       }
     >
       <div class="flex justify-center h-full">
+        {/* Dynamic paragraph padding style */}
+        <style>{`.prose-clean p { padding-bottom: ${editorStore.paddingSize()} !important; }`}</style>
         <div
           style={{
             width: `${editorStore.textSize()}%`,
@@ -939,9 +941,9 @@ const EditorArea: Component = () => {
                   onInput={(e) => setCurrentContent(e.currentTarget.value)}
                   onBlur={handleAutoSave}
                   style={{
-                    "line-height": "1.6em",
                     border: "none",
                     outline: "none",
+                    "font-size": `${editorStore.fontSize()}px`,
                   }}
                 />
               }
@@ -963,9 +965,9 @@ const EditorArea: Component = () => {
                   handleAutoSave();
                 }}
                 style={{
-                  "line-height": "1.6em",
                   border: "none",
                   outline: "none",
+                  "font-size": `${editorStore.fontSize()}px`,
                 }}
               />
             </Show>

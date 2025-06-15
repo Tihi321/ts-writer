@@ -5,6 +5,7 @@ import { indexedDBService } from "../services/indexedDB";
 import { uiStore } from "../stores/uiStore";
 import { getTheme, setTheme, toggleTheme, type Theme } from "../utils/theme";
 import "../styles/themes.css";
+import { editorStore } from "../stores/editorStore";
 
 const SettingsModal: Component = () => {
   const [isSigningIn, setIsSigningIn] = createSignal(false);
@@ -536,6 +537,137 @@ const SettingsModal: Component = () => {
                       />
                     </button>
                   </label>
+
+                  {/* Editor Width */}
+                  <div class="space-y-2">
+                    <label class="text-sm font-medium theme-text-secondary">Editor Width</label>
+                    <div class="flex items-center space-x-2">
+                      <button
+                        onClick={() => editorStore.setTextSize(50)}
+                        class={`px-2 py-1 text-xs border transition-all duration-200 ${
+                          editorStore.textSize() === 50
+                            ? "theme-btn-primary"
+                            : "theme-btn-secondary"
+                        }`}
+                        title="Narrow (50%)"
+                      >
+                        Narrow
+                      </button>
+                      <button
+                        onClick={() => editorStore.setTextSize(75)}
+                        class={`px-2 py-1 text-xs border transition-all duration-200 ${
+                          editorStore.textSize() === 75
+                            ? "theme-btn-primary"
+                            : "theme-btn-secondary"
+                        }`}
+                        title="Medium (75%)"
+                      >
+                        Medium
+                      </button>
+                      <button
+                        onClick={() => editorStore.setTextSize(100)}
+                        class={`px-2 py-1 text-xs border transition-all duration-200 ${
+                          editorStore.textSize() === 100
+                            ? "theme-btn-primary"
+                            : "theme-btn-secondary"
+                        }`}
+                        title="Full (100%)"
+                      >
+                        Full
+                      </button>
+                    </div>
+                    <div class="text-xs theme-text-muted mt-1">
+                      Controls the width of the editor area (not the text size).
+                    </div>
+                  </div>
+
+                  {/* Font Size */}
+                  <div class="space-y-2">
+                    <label class="text-sm font-medium theme-text-secondary">Font Size</label>
+                    <div class="flex items-center space-x-2">
+                      <button
+                        onClick={() => editorStore.setFontSize(14)}
+                        class={`px-2 py-1 text-xs border transition-all duration-200 ${
+                          editorStore.fontSize() === 14
+                            ? "theme-btn-primary"
+                            : "theme-btn-secondary"
+                        }`}
+                        title="Small (14px)"
+                      >
+                        Small
+                      </button>
+                      <button
+                        onClick={() => editorStore.setFontSize(16)}
+                        class={`px-2 py-1 text-xs border transition-all duration-200 ${
+                          editorStore.fontSize() === 16
+                            ? "theme-btn-primary"
+                            : "theme-btn-secondary"
+                        }`}
+                        title="Medium (16px)"
+                      >
+                        Medium
+                      </button>
+                      <button
+                        onClick={() => editorStore.setFontSize(18)}
+                        class={`px-2 py-1 text-xs border transition-all duration-200 ${
+                          editorStore.fontSize() === 18
+                            ? "theme-btn-primary"
+                            : "theme-btn-secondary"
+                        }`}
+                        title="Large (18px)"
+                      >
+                        Large
+                      </button>
+                    </div>
+                    <div class="text-xs theme-text-muted mt-1">
+                      Controls the font size in the editor area.
+                    </div>
+                  </div>
+
+                  {/* Paragraph Padding */}
+                  <div class="space-y-2">
+                    <label class="text-sm font-medium theme-text-secondary">
+                      Paragraph Padding
+                    </label>
+                    <div class="flex items-center space-x-2">
+                      <button
+                        onClick={() => editorStore.setPaddingSize("0.5em")}
+                        class={`px-2 py-1 text-xs border transition-all duration-200 ${
+                          editorStore.paddingSize() === "0.5em"
+                            ? "theme-btn-primary"
+                            : "theme-btn-secondary"
+                        }`}
+                        title="0.5em"
+                      >
+                        0.5em
+                      </button>
+                      <button
+                        onClick={() => editorStore.setPaddingSize("1em")}
+                        class={`px-2 py-1 text-xs border transition-all duration-200 ${
+                          editorStore.paddingSize() === "1em"
+                            ? "theme-btn-primary"
+                            : "theme-btn-secondary"
+                        }`}
+                        title="1em"
+                      >
+                        1em
+                      </button>
+                      <button
+                        onClick={() => editorStore.setPaddingSize("1.5em")}
+                        class={`px-2 py-1 text-xs border transition-all duration-200 ${
+                          editorStore.paddingSize() === "1.5em"
+                            ? "theme-btn-primary"
+                            : "theme-btn-secondary"
+                        }`}
+                        title="1.5em"
+                      >
+                        1.5em
+                      </button>
+                    </div>
+                    <div class="text-xs theme-text-muted mt-1">
+                      Controls the vertical padding below each paragraph in the editor.
+                    </div>
+                  </div>
                 </div>
               </div>
             </Show>

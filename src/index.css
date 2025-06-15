@@ -84,8 +84,9 @@ body {
 .prose-clean p {
   font-family: 'Courier Prime', 'Courier New', monospace;
   line-height: 1.7;
-  margin-bottom: 1.25rem;
   color: var(--text-secondary);
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .prose-clean strong {
